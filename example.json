@@ -1,0 +1,85 @@
+{
+  "node_types": {
+    "node_type_1": {
+      "colour": "#ef4444",
+      "label": "Person",
+      "icon": "user"
+    },
+    "node_type_2": {
+      "colour": "#3b82f6",
+      "label": "Location",
+      "icon": "building"
+    },
+    "node_type_3": {
+      "colour": "#22c55e",
+      "label": "Organization",
+      "icon": "globe"
+    }
+  },
+  "edge_types": {
+    "edge_type_1": {
+      "colour": "#22c55e",
+      "label": "Knows"
+    },
+    "edge_type_2": {
+      "colour": "#f59e0b",
+      "label": "Works At"
+    }
+  },
+  "nodes": {
+    "node_1": {
+      "node_type": "node_type_1",
+      "label": "Alice",
+      "properties": { "age": "30", "role": "Engineer" },
+      "layout_properties": { "x_pos": 150, "y_pos": 200 }
+    },
+    "node_2": {
+      "node_type": "node_type_1",
+      "label": "Bob",
+      "properties": { "age": "25", "role": "Designer" },
+      "layout_properties": { "x_pos": 400, "y_pos": 200 }
+    },
+    "node_3": {
+      "node_type": "node_type_2",
+      "label": "Paris",
+      "properties": { "country": "France" },
+      "layout_properties": { "x_pos": 275, "y_pos": 100 }
+    },
+    "node_4": {
+      "node_type": "node_type_3",
+      "label": "TechCorp",
+      "properties": { "industry": "Technology" },
+      "layout_properties": { "x_pos": 275, "y_pos": 350 }
+    }
+  },
+  "edges": {
+    "edge_1": {
+      "from_node": "node_1",
+      "to_node": "node_2",
+      "edge_type": "edge_type_1",
+      "weight": 2,
+      "properties": { "since": "2020" }
+    },
+    "edge_2": {
+      "from_node": "node_1",
+      "to_node": "node_3",
+      "edge_type": "edge_type_1",
+      "weight": 1,
+      "properties": {}
+    },
+    "edge_3": {
+      "from_node": "node_1",
+      "to_node": "node_4",
+      "edge_type": "edge_type_2",
+      "weight": 1.5,
+      "properties": { "since": "2019" }
+    },
+    "edge_4": {
+      "from_node": "node_2",
+      "to_node": "node_4",
+      "edge_type": "edge_type_2",
+      "weight": 1.5,
+      "properties": { "since": "2021" }
+    }
+  }
+}

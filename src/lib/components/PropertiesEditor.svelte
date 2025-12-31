@@ -1,0 +1,392 @@
+<script lang="ts">
+  import { graphData, selectedNodeId, selectedEdgeId, darkMode } from '../stores';
+  import { NODE_ICONS } from '../types';
+  import NodeIconComponent from './NodeIcon.svelte';
+
+  let newPropertyKey = '';
+  let newPropertyValue = '';
+
+  $: selectedNode = $selectedNodeId ? $graphData.nodes[$selectedNodeId] : null;
+  $: selectedEdge = $selectedEdgeId ? $graphData.edges[$selectedEdgeId] : null;
+  $: selectedNodeType = selectedNode ? $graphData.node_types[selectedNode.node_type] : null;
+  $: selectedEdgeType = selectedEdge ? $graphData.edge_types[selectedEdge.edge_type] : null;
+
+  function updateNodeField(field: 'label' | 'node_type', value: string) {
+    if (!$selectedNodeId) return;
+    graphData.update(data => {
+      if (data.nodes[$selectedNodeId!]) {
+        if (field === 'label') {
+          data.nodes[$selectedNodeId!].label = value;
+        } else {
+          data.nodes[$selectedNodeId!].node_type = value;
+        }
+      }
+      return data;
+    });
+  }
+
+  function updateEdgeField(field: 'edge_type' | 'weight', value: string | number) {
+    if (!$selectedEdgeId) return;
+    graphData.update(data => {
+      if (data.edges[$selectedEdgeId!]) {
+        if (field === 'edge_type') {
+          data.edges[$selectedEdgeId!].edge_type = value as string;
+        } else {
+          data.edges[$selectedEdgeId!].weight = value as number;
+        }
+      }
+      return data;
+    });
+  }
+
+  function addNodeProperty() {
+    if (!$selectedNodeId || !newPropertyKey) return;
+    graphData.update(data => {
+      if (data.nodes[$selectedNodeId!]) {
+        data.nodes[$selectedNodeId!].properties[newPropertyKey] = newPropertyValue;
+      }
+      return data;
+    });
+    newPropertyKey = '';
+    newPropertyValue = '';
+  }
+
+  function removeNodeProperty(key: string) {
+    if (!$selectedNodeId) return;
+    graphData.update(data => {
+      if (data.nodes[$selectedNodeId!]) {
+        delete data.nodes[$selectedNodeId!].properties[key];
+      }
+      return data;
+    });
+  }
+
+  function updateNodeProperty(key: string, value: string) {
+    if (!$selectedNodeId) return;
+    graphData.update(data => {
+      if (data.nodes[$selectedNodeId!]) {
+        data.nodes[$selectedNodeId!].properties[key] = value;
+      }
+      return data;
+    });
+  }
+
+  function addEdgeProperty() {
+    if (!$selectedEdgeId || !newPropertyKey) return;
+    graphData.update(data => {
+      if (data.edges[$selectedEdgeId!]) {
+        data.edges[$selectedEdgeId!].properties[newPropertyKey] = newPropertyValue;
+      }
+      return data;
+    });
+    newPropertyKey = '';
+    newPropertyValue = '';
+  }
+
+  function removeEdgeProperty(key: string) {
+    if (!$selectedEdgeId) return;
+    graphData.update(data => {
+      if (data.edges[$selectedEdgeId!]) {
+        delete data.edges[$selectedEdgeId!].properties[key];
+      }
+      return data;
+    });
+  }
+
+  function updateEdgeProperty(key: string, value: string) {
+    if (!$selectedEdgeId) return;
+    graphData.update(data => {
+      if (data.edges[$selectedEdgeId!]) {
+        data.edges[$selectedEdgeId!].properties[key] = value;
+      }
+      return data;
+    });
+  }
+
+  function deleteNode() {
+    if (!$selectedNodeId) return;
+    graphData.update(data => {
+      delete data.nodes[$selectedNodeId!];
+      Object.keys(data.edges).forEach(edgeId => {
+        const edge = data.edges[edgeId];
+        if (edge.from_node === $selectedNodeId || edge.to_node === $selectedNodeId) {
+          delete data.edges[edgeId];
+        }
+      });
+      return data;
+    });
+    selectedNodeId.set(null);
+  }
+
+  function deleteEdge() {
+    if (!$selectedEdgeId) return;
+    graphData.update(data => {
+      delete data.edges[$selectedEdgeId!];
+      return data;
+    });
+    selectedEdgeId.set(null);
+  }
+</script>
+
+{#if selectedNode}
+  <div class="flex flex-col h-full">
+    <div class="flex-1 space-y-4 overflow-y-auto">
+      <!-- Header -->
+      <div class="flex items-center gap-3 pb-4 border-b {$darkMode ? 'border-gray-700' : 'border-gray-200'}">
+        <div class="relative">
+          <div class="w-14 h-14 rounded-xl flex items-center justify-center" style="background: {selectedNodeType?.colour || '#ccc'}20">
+            <NodeIconComponent icon={selectedNodeType?.icon || 'circle'} size={36} color={selectedNodeType?.colour || '#ccc'} />
+          </div>
+          <div class="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-blue-500 border-2 {$darkMode ? 'border-gray-900' : 'border-white'}"></div>
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="font-bold text-lg {$darkMode ? 'text-white' : 'text-gray-800'} truncate">{selectedNode.label}</div>
+          <div class="text-xs {$darkMode ? 'text-gray-500' : 'text-gray-400'} truncate font-mono">{$selectedNodeId}</div>
+        </div>
+      </div>
+      
+      <!-- Label -->
+      <div>
+        <label for="node-label" class="block text-xs font-semibold mb-1.5 uppercase tracking-wide {$darkMode ? 'text-gray-400' : 'text-gray-500'}">Label</label>
+        <input
+          id="node-label"
+          type="text"
+          value={selectedNode.label}
+          on:input={(e) => updateNodeField('label', e.currentTarget.value)}
+          class="w-full px-4 py-3 border rounded-xl transition-all {$darkMode ? 'bg-gray-800 border-gray-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-800'} focus:ring-2 focus:ring-purple-500 focus:outline-none"
+        />
+      </div>
+      
+      <!-- Node Type with Icon Preview -->
+      <div>
+        <label for="node-type-select" class="block text-xs font-semibold mb-1.5 uppercase tracking-wide {$darkMode ? 'text-gray-400' : 'text-gray-500'}">Node Type</label>
+        <div class="relative">
+          <select
+            id="node-type-select"
+            value={selectedNode.node_type}
+            on:change={(e) => updateNodeField('node_type', e.currentTarget.value)}
+            class="w-full pl-12 pr-4 py-3 border rounded-xl transition-all appearance-none cursor-pointer {$darkMode ? 'bg-gray-800 border-gray-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-800'} focus:ring-2 focus:ring-purple-500 focus:outline-none"
+          >
+            {#each Object.entries($graphData.node_types) as [typeId, type]}
+              <option value={typeId}>{type.label}</option>
+            {/each}
+          </select>
+          {#if selectedNodeType}
+            <div class="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">
+              <NodeIconComponent icon={selectedNodeType.icon || 'circle'} size={24} color={selectedNodeType.colour} />
+            </div>
+          {/if}
+          <div class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+            <svg class="w-4 h-4 {$darkMode ? 'text-gray-400' : 'text-gray-500'}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Custom Properties -->
+      <div class="rounded-xl border overflow-hidden {$darkMode ? 'bg-gray-800/50 border-gray-700' : 'bg-gray-50 border-gray-200'}">
+        <div class="px-3 py-2 border-b {$darkMode ? 'border-gray-700 bg-gray-800' : 'border-gray-200 bg-gray-100'}">
+          <div class="text-xs font-semibold uppercase tracking-wide {$darkMode ? 'text-gray-400' : 'text-gray-500'}">Custom Properties</div>
+        </div>
+        <div class="p-3 space-y-2">
+          {#each Object.entries(selectedNode.properties) as [key, value]}
+            <div class="flex gap-2 items-center">
+              <input
+                type="text"
+                value={key}
+                readonly
+                aria-label="Property key"
+                class="flex-1 px-3 py-2 text-sm border rounded-lg {$darkMode ? 'bg-gray-700 border-gray-600 text-gray-400' : 'bg-gray-100 border-gray-200 text-gray-500'}"
+              />
+              <input
+                type="text"
+                value={value}
+                on:input={(e) => updateNodeProperty(key, e.currentTarget.value)}
+                aria-label="Property value for {key}"
+                class="flex-1 px-3 py-2 text-sm border rounded-lg {$darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-200'} focus:ring-2 focus:ring-purple-500 focus:outline-none"
+              />
+              <button
+                on:click={() => removeNodeProperty(key)}
+                class="w-9 h-9 flex items-center justify-center rounded-lg text-red-500 hover:bg-red-500/20 transition-colors"
+                aria-label="Remove property {key}"
+              >✕</button>
+            </div>
+          {/each}
+          
+          <div class="pt-2 mt-2 border-t {$darkMode ? 'border-gray-700' : 'border-gray-200'} space-y-2">
+            <input
+              type="text"
+              placeholder="Key"
+              bind:value={newPropertyKey}
+              aria-label="New property key"
+              class="w-full px-3 py-2 text-sm border rounded-lg {$darkMode ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-500' : 'bg-white border-gray-200 placeholder-gray-400'} focus:ring-2 focus:ring-purple-500 focus:outline-none"
+            />
+            <input
+              type="text"
+              placeholder="Value"
+              bind:value={newPropertyValue}
+              aria-label="New property value"
+              class="w-full px-3 py-2 text-sm border rounded-lg {$darkMode ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-500' : 'bg-white border-gray-200 placeholder-gray-400'} focus:ring-2 focus:ring-purple-500 focus:outline-none"
+            />
+            <button
+              on:click={addNodeProperty}
+              disabled={!newPropertyKey}
+              class="w-full py-2.5 rounded-lg text-sm font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed bg-linear-to-r from-purple-500 to-pink-500 hover:from-purple-400 hover:to-pink-400 text-white"
+            >+ Add Property</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Delete Button -->
+    <div class="pt-4 mt-4 border-t {$darkMode ? 'border-gray-700' : 'border-gray-200'}">
+      <button
+        on:click={deleteNode}
+        class="w-full py-3.5 rounded-xl text-sm font-semibold transition-all bg-linear-to-r from-red-500 to-rose-500 hover:from-red-400 hover:to-rose-400 text-white shadow-lg shadow-red-500/20"
+      >🗑️ Delete Node</button>
+    </div>
+  </div>
+{:else if selectedEdge}
+  <div class="flex flex-col h-full">
+    <div class="flex-1 space-y-4 overflow-y-auto">
+      <!-- Header -->
+      <div class="flex items-center gap-3 pb-4 border-b {$darkMode ? 'border-gray-700' : 'border-gray-200'}">
+        <div class="relative">
+          <div class="w-14 h-14 rounded-xl flex items-center justify-center" style="background: {selectedEdgeType?.colour || '#000'}20">
+            <div class="w-8 h-2 rounded-full" style="background: {selectedEdgeType?.colour || '#000'}"></div>
+          </div>
+          <div class="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-green-500 border-2 {$darkMode ? 'border-gray-900' : 'border-white'}"></div>
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="font-bold text-lg {$darkMode ? 'text-white' : 'text-gray-800'}">{selectedEdgeType?.label || 'Edge'}</div>
+          <div class="text-xs {$darkMode ? 'text-gray-500' : 'text-gray-400'} truncate font-mono">{$selectedEdgeId}</div>
+        </div>
+      </div>
+      
+      <!-- Edge Type with Color Preview -->
+      <div>
+        <label for="edge-type-select" class="block text-xs font-semibold mb-1.5 uppercase tracking-wide {$darkMode ? 'text-gray-400' : 'text-gray-500'}">Edge Type</label>
+        <div class="relative">
+          <select
+            id="edge-type-select"
+            value={selectedEdge.edge_type}
+            on:change={(e) => updateEdgeField('edge_type', e.currentTarget.value)}
+            class="w-full pl-10 pr-4 py-3 border rounded-xl transition-all appearance-none cursor-pointer {$darkMode ? 'bg-gray-800 border-gray-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-800'} focus:ring-2 focus:ring-purple-500 focus:outline-none"
+          >
+            {#each Object.entries($graphData.edge_types) as [typeId, type]}
+              <option value={typeId}>{type.label}</option>
+            {/each}
+          </select>
+          {#if selectedEdgeType}
+            <div class="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none w-5 h-2 rounded" style="background-color: {selectedEdgeType.colour}"></div>
+          {/if}
+          <div class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+            <svg class="w-4 h-4 {$darkMode ? 'text-gray-400' : 'text-gray-500'}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Weight -->
+      <div>
+        <label for="edge-weight" class="block text-xs font-semibold mb-1.5 uppercase tracking-wide {$darkMode ? 'text-gray-400' : 'text-gray-500'}">Weight (thickness)</label>
+        <input
+          id="edge-weight"
+          type="number"
+          value={selectedEdge.weight}
+          min="0.5"
+          step="0.5"
+          on:input={(e) => updateEdgeField('weight', parseFloat(e.currentTarget.value) || 1)}
+          class="w-full px-4 py-3 border rounded-xl transition-all {$darkMode ? 'bg-gray-800 border-gray-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-800'} focus:ring-2 focus:ring-purple-500 focus:outline-none"
+        />
+      </div>
+      
+      <!-- Connection Info -->
+      <div class="rounded-xl border overflow-hidden {$darkMode ? 'bg-gray-800/50 border-gray-700' : 'bg-gray-50 border-gray-200'}">
+        <div class="px-3 py-2 border-b {$darkMode ? 'border-gray-700 bg-gray-800' : 'border-gray-200 bg-gray-100'}">
+          <div class="text-xs font-semibold uppercase tracking-wide {$darkMode ? 'text-gray-400' : 'text-gray-500'}">Connection</div>
+        </div>
+        <div class="p-3 space-y-2 text-sm">
+          <div class="flex items-center gap-2">
+            <span class="w-16 {$darkMode ? 'text-gray-500' : 'text-gray-400'}">From:</span>
+            <span class="font-medium {$darkMode ? 'text-white' : 'text-gray-800'}">{$graphData.nodes[selectedEdge.from_node]?.label || selectedEdge.from_node}</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="w-16 {$darkMode ? 'text-gray-500' : 'text-gray-400'}">To:</span>
+            <span class="font-medium {$darkMode ? 'text-white' : 'text-gray-800'}">{$graphData.nodes[selectedEdge.to_node]?.label || selectedEdge.to_node}</span>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Custom Properties -->
+      <div class="rounded-xl border overflow-hidden {$darkMode ? 'bg-gray-800/50 border-gray-700' : 'bg-gray-50 border-gray-200'}">
+        <div class="px-3 py-2 border-b {$darkMode ? 'border-gray-700 bg-gray-800' : 'border-gray-200 bg-gray-100'}">
+          <div class="text-xs font-semibold uppercase tracking-wide {$darkMode ? 'text-gray-400' : 'text-gray-500'}">Custom Properties</div>
+        </div>
+        <div class="p-3 space-y-2">
+          {#each Object.entries(selectedEdge.properties) as [key, value]}
+            <div class="flex gap-2 items-center">
+              <input
+                type="text"
+                value={key}
+                readonly
+                aria-label="Property key"
+                class="flex-1 px-3 py-2 text-sm border rounded-lg {$darkMode ? 'bg-gray-700 border-gray-600 text-gray-400' : 'bg-gray-100 border-gray-200 text-gray-500'}"
+              />
+              <input
+                type="text"
+                value={value}
+                on:input={(e) => updateEdgeProperty(key, e.currentTarget.value)}
+                aria-label="Property value for {key}"
+                class="flex-1 px-3 py-2 text-sm border rounded-lg {$darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-200'} focus:ring-2 focus:ring-purple-500 focus:outline-none"
+              />
+              <button
+                on:click={() => removeEdgeProperty(key)}
+                class="w-9 h-9 flex items-center justify-center rounded-lg text-red-500 hover:bg-red-500/20 transition-colors"
+                aria-label="Remove property {key}"
+              >✕</button>
+            </div>
+          {/each}
+          
+          <div class="pt-2 mt-2 border-t {$darkMode ? 'border-gray-700' : 'border-gray-200'} space-y-2">
+            <input
+              type="text"
+              placeholder="Key"
+              bind:value={newPropertyKey}
+              aria-label="New property key"
+              class="w-full px-3 py-2 text-sm border rounded-lg {$darkMode ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-500' : 'bg-white border-gray-200 placeholder-gray-400'} focus:ring-2 focus:ring-purple-500 focus:outline-none"
+            />
+            <input
+              type="text"
+              placeholder="Value"
+              bind:value={newPropertyValue}
+              aria-label="New property value"
+              class="w-full px-3 py-2 text-sm border rounded-lg {$darkMode ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-500' : 'bg-white border-gray-200 placeholder-gray-400'} focus:ring-2 focus:ring-purple-500 focus:outline-none"
+            />
+            <button
+              on:click={addEdgeProperty}
+              disabled={!newPropertyKey}
+              class="w-full py-2.5 rounded-lg text-sm font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed bg-linear-to-r from-purple-500 to-pink-500 hover:from-purple-400 hover:to-pink-400 text-white"
+            >+ Add Property</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Delete Button -->
+    <div class="pt-4 mt-4 border-t {$darkMode ? 'border-gray-700' : 'border-gray-200'}">
+      <button
+        on:click={deleteEdge}
+        class="w-full py-3.5 rounded-xl text-sm font-semibold transition-all bg-linear-to-r from-red-500 to-rose-500 hover:from-red-400 hover:to-rose-400 text-white shadow-lg shadow-red-500/20"
+      >🗑️ Delete Edge</button>
+    </div>
+  </div>
+{:else}
+  <div class="flex flex-col items-center justify-center h-full text-center p-6">
+    <div class="w-20 h-20 rounded-2xl flex items-center justify-center mb-4 {$darkMode ? 'bg-linear-to-br from-gray-800 to-gray-700' : 'bg-linear-to-br from-gray-100 to-gray-200'}">
+      <svg class="w-10 h-10 {$darkMode ? 'text-gray-600' : 'text-gray-400'}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122" />
+      </svg>
+    </div>
+    <p class="font-bold text-lg {$darkMode ? 'text-gray-300' : 'text-gray-600'}">No Selection</p>
+    <p class="text-sm mt-2 max-w-[200px] {$darkMode ? 'text-gray-500' : 'text-gray-400'}">Click a node or edge on the canvas to view and edit its properties</p>
+  </div>
+{/if}
