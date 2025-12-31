@@ -125,6 +125,9 @@
       width="200"
       height="200"
       class="cursor-pointer"
+      role="button"
+      tabindex="0"
+      aria-label="Minimap - click and drag to navigate the graph viewport"
       on:mousedown={handleMinimapMouseDown}
       on:mousemove={handleMinimapMouseMove}
       on:mouseup={handleMinimapMouseUp}
