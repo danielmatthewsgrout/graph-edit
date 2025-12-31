@@ -7,15 +7,15 @@
 [![SvelteKit](https://img.shields.io/badge/SvelteKit-5.0-FF3E00?style=for-the-badge&logo=svelte&logoColor=white)](https://kit.svelte.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![TailwindCSS](https://img.shields.io/badge/Tailwind-4.x-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
-[![License](https://img.shields.io/badge/License-Apache_2.0-green?style=for-the-badge)](LICENSE)
+[![License](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge)](LICENSE)
 
 <br />
 
-**Create, edit, and visualize graph structures with an intuitive drag-and-drop interface.**
+**Create, edit, and visualise graph structures with an intuitive drag-and-drop interface.**
 
 <br />
 
-[**Report Bug**](https://github.com/danielmatthewsgrout/graph-edit/issues) · [**Request Feature**](https://github.com/danielmatthewsgrout/graph-edit/issues)
+[**View on GitHub**](https://github.com/danielmatthewsgrout/graph-edit) · [**Report Bug**](https://github.com/danielmatthewsgrout/graph-edit/issues) · [**Request Feature**](https://github.com/danielmatthewsgrout/graph-edit/issues)
 
 </div>
 
@@ -23,11 +23,12 @@
 
 ## ✨ Features
 
-### 🎨 Rich Graph Visualization
+### 🎨 Rich Graph Visualisation
 - **16 Node Shapes** — Circle, square, diamond, star, hexagon, triangle, user, building, database, server, globe, and more
-- **Customizable Colors** — Full color picker for nodes and edges with live preview
+- **Customisable Colours** — Full colour picker for nodes and edges with live preview
 - **Weighted Edges** — Visual thickness scales with weight values
-- **Directed Arrows** — Clear directional indicators with colored arrowheads
+- **Line Styles** — Solid, dashed, dotted, and dash-dot edges per edge type
+- **Directed Arrows** — Clear directional indicators with coloured arrowheads
 - **Multi-Edge Support** — Automatic curve offsetting for parallel edges
 
 ### 🖱️ Intuitive Interactions
@@ -36,24 +37,38 @@
 - **Quick Node Creation** — Double-click canvas or use the Add button
 - **Easy Edge Creation** — Right-click a node to start, click another to connect
 - **Visual Selection** — Glowing highlight effects for selected items
-- **Center View** — One-click button to center all nodes in view
+- **Centre View** — One-click button to centre all nodes in view
+- **Multi-select** — Shift/Ctrl click to select multiple nodes or edges
+- **Copy & Paste** — Duplicate selected nodes and edges with keyboard shortcuts
+- **Minimap** — Navigate large graphs with an interactive overview map
+- **Snap to Grid** — Optional grid alignment for precise node positioning
 
 ### 🎛️ Type Management
 - **Collapsible Panels** — Clean interface with expandable type lists
-- **Smart Dropdowns** — Type selectors show icon and color preview inline
+- **Smart Dropdowns** — Type selectors show icon and colour preview inline
+- **Edge Styles** — Choose edge line styles (solid/dashed/dotted/dash-dot) per type
 - **Live Preview** — See type changes reflected immediately on canvas
 - **Active Type Selection** — New items use the currently selected type
 
 ### 📝 Properties Inspector
 - **Edit Labels** — Rename nodes with instant updates
-- **Change Types** — Dropdown with icon and color preview
+- **Change Types** — Dropdown with icon and colour preview
 - **Custom Properties** — Add unlimited key-value metadata
 - **Weight Control** — Adjust edge thickness in real-time
+- **Edge Styling** — Quick controls for weight and line style on selected edges
 
-### 💾 Data Persistence
-- **Auto-Save** — Graph automatically saved to browser storage
+### 📊 Graph Analytics
+- **Statistics Panel** — Real-time metrics including node/edge counts, connectivity, and degree statistics
+- **Type Distribution** — See counts for each node and edge type
+- **Graph Health** — Identify isolated nodes and connectivity metrics
+
+### 💾 Data Persistence & Export
+- **Auto-Save** — Graph, camera position (pan/zoom), and theme saved to browser storage
 - **JSON Export** — Download your graph as a `.json` file
 - **JSON Import** — Load existing graphs from files
+- **New Graph** — Reset with confirmation
+- **SVG/PNG Export** — One-click export of the current canvas
+- **Graph Validation** — Clean up invalid edges and missing node references
 
 
 ---
@@ -92,6 +107,7 @@ npm run preview
 
 ## 🎮 Controls
 
+### Mouse & Canvas
 | Action | Control |
 |--------|---------|
 | **Add Node** | Double-click canvas or click `+ Add Node` |
@@ -100,11 +116,31 @@ npm run preview
 | **Cancel Edge** | Click on empty canvas |
 | **Move Node** | Drag the node |
 | **Select Item** | Click on node or edge |
+| **Multi-select** | Shift/Ctrl + Click |
 | **Zoom** | Mouse wheel scroll |
 | **Pan** | Middle-mouse button drag |
-| **Auto Layout** | Click `Auto Layout` button |
-| **Center View** | Click center button (crosshair icon) |
+| **Centre View** | Click centre button (crosshair icon) |
 | **Reset Zoom** | Click zoom percentage display |
+
+### Keyboard Shortcuts
+| Action | Shortcut |
+|--------|----------|
+| **Undo** | Ctrl/Cmd + Z |
+| **Redo** | Ctrl/Cmd + Shift + Z |
+| **Copy Selection** | Ctrl/Cmd + C |
+| **Paste** | Ctrl/Cmd + V |
+| **Delete Selection** | Delete / Backspace |
+| **Search** | Enter text in Search box, press Enter |
+| **Show Shortcuts** | ? |
+
+### Toolbar Actions
+| Action | Control |
+|--------|---------|
+| **Layout Presets** | Select from dropdown (Grid, Force-Directed, Radial, Tree) |
+| **Export SVG/PNG** | Click export buttons |
+| **Validate Graph** | Click Validate button |
+| **New Graph** | Click `New` button (with confirmation) |
+| **Toggle Dark Mode** | Click theme toggle button |
 
 ---
 
@@ -116,12 +152,13 @@ The application uses a structured JSON format:
 interface GraphData {
   node_types: Record<string, {
     label: string;
-    colour: string;      // Hex color
+    colour: string;      // Hex colour
     icon?: NodeIcon;     // Shape type
   }>;
   edge_types: Record<string, {
     label: string;
     colour: string;
+    line_style?: 'solid' | 'dashed' | 'dotted' | 'dashdot';
   }>;
   nodes: Record<string, {
     node_type: string;
@@ -154,15 +191,25 @@ interface GraphData {
 src/
 ├── lib/
 │   ├── components/
-│   │   ├── GraphCanvas.svelte      # Main SVG canvas with zoom/pan
-│   │   ├── TypeManager.svelte      # Collapsible type palette
-│   │   ├── PropertiesEditor.svelte # Inspector with inline previews
-│   │   ├── ImportExport.svelte     # File operations & dark mode
-│   │   └── NodeIcon.svelte         # SVG icon renderer
-│   ├── stores.ts                   # Persistent Svelte stores
-│   └── types.ts                    # TypeScript interfaces
+│   │   ├── GraphCanvas.svelte         # Main SVG canvas with zoom/pan
+│   │   ├── GraphRenderer.svelte       # SVG rendering logic
+│   │   ├── GraphMinimap.svelte         # Interactive overview map
+│   │   ├── GraphStatistics.svelte     # Analytics panel
+│   │   ├── CanvasToolbar.svelte        # Top toolbar controls
+│   │   ├── CanvasSearch.svelte         # Search functionality
+│   │   ├── EdgeStylingPanel.svelte    # Quick edge styling
+│   │   ├── KeyboardShortcutsModal.svelte # Shortcuts overlay
+│   │   ├── TypeManager.svelte         # Collapsible type palette
+│   │   ├── PropertiesEditor.svelte     # Inspector with inline previews
+│   │   ├── ImportExport.svelte        # File operations & dark mode
+│   │   └── NodeIcon.svelte            # Icon component renderer
+│   ├── utils/
+│   │   ├── layoutUtils.ts             # Layout algorithms
+│   │   └── iconPaths.ts               # Icon path utilities
+│   ├── stores.ts                      # Persistent Svelte stores
+│   └── types.ts                       # TypeScript interfaces
 └── routes/
-    └── +page.svelte                # Main layout
+    └── +page.svelte                   # Main layout
 ```
 
 ---
@@ -175,13 +222,15 @@ src/
 | [TypeScript](https://www.typescriptlang.org/) | Type safety |
 | [TailwindCSS 4](https://tailwindcss.com/) | Utility-first styling |
 | [Vite](https://vitejs.dev/) | Lightning-fast builds |
+| [Lucide Svelte](https://lucide.dev/) | Icon library |
 | **SVG** | Precise, scalable graph rendering |
+| LocalStorage | Persists graph data, dark mode, and camera (zoom/pan) |
 
 ---
 
 ## 📄 License
 
-This project is licensed under the **Apache License 2.0** — see the [LICENSE](LICENSE) file for details.
+This project is licensed under the **MIT License** — see the [LICENSE](LICENSE) file for details.
 
 ---
 

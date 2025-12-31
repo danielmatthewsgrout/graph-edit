@@ -2,6 +2,7 @@
   import { graphData, selectedNodeId, selectedEdgeId, darkMode } from '../stores';
   import { NODE_ICONS } from '../types';
   import NodeIconComponent from './NodeIcon.svelte';
+  import { ChevronDown, MousePointer2 } from 'lucide-svelte';
 
   let newPropertyKey = '';
   let newPropertyValue = '';
@@ -11,28 +12,41 @@
   $: selectedNodeType = selectedNode ? $graphData.node_types[selectedNode.node_type] : null;
   $: selectedEdgeType = selectedEdge ? $graphData.edge_types[selectedEdge.edge_type] : null;
 
-  function updateNodeField(field: 'label' | 'node_type', value: string) {
+  function updateNodeField(field: 'label' | 'node_type' | 'badge', value: string) {
     if (!$selectedNodeId) return;
     graphData.update(data => {
       if (data.nodes[$selectedNodeId!]) {
         if (field === 'label') {
           data.nodes[$selectedNodeId!].label = value;
-        } else {
+        } else if (field === 'node_type') {
           data.nodes[$selectedNodeId!].node_type = value;
+        } else if (field === 'badge') {
+          if (value.trim()) {
+            data.nodes[$selectedNodeId!].badge = value.trim().slice(0, 2);
+          } else {
+            delete data.nodes[$selectedNodeId!].badge;
+          }
         }
       }
       return data;
     });
   }
 
-  function updateEdgeField(field: 'edge_type' | 'weight', value: string | number) {
+  function updateEdgeField(field: 'edge_type' | 'weight' | 'label', value: string | number) {
     if (!$selectedEdgeId) return;
     graphData.update(data => {
       if (data.edges[$selectedEdgeId!]) {
         if (field === 'edge_type') {
           data.edges[$selectedEdgeId!].edge_type = value as string;
-        } else {
+        } else if (field === 'weight') {
           data.edges[$selectedEdgeId!].weight = value as number;
+        } else if (field === 'label') {
+          const val = value as string;
+          if (val.trim()) {
+            data.edges[$selectedEdgeId!].label = val;
+          } else {
+            delete data.edges[$selectedEdgeId!].label;
+          }
         }
       }
       return data;
@@ -157,6 +171,20 @@
         />
       </div>
       
+      <!-- Badge -->
+      <div>
+        <label for="node-badge" class="block text-xs font-semibold mb-1.5 uppercase tracking-wide {$darkMode ? 'text-gray-400' : 'text-gray-500'}">Badge (emoji)</label>
+        <input
+          id="node-badge"
+          type="text"
+          value={selectedNode.badge || ''}
+          placeholder="e.g. ⭐ 🎯 🔥"
+          maxlength="2"
+          on:input={(e) => updateNodeField('badge', e.currentTarget.value)}
+          class="w-full px-4 py-3 border rounded-xl transition-all text-center text-xl {$darkMode ? 'bg-gray-800 border-gray-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-800'} focus:ring-2 focus:ring-purple-500 focus:outline-none"
+        />
+      </div>
+      
       <!-- Node Type with Icon Preview -->
       <div>
         <label for="node-type-select" class="block text-xs font-semibold mb-1.5 uppercase tracking-wide {$darkMode ? 'text-gray-400' : 'text-gray-500'}">Node Type</label>
@@ -177,7 +205,7 @@
             </div>
           {/if}
           <div class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
-            <svg class="w-4 h-4 {$darkMode ? 'text-gray-400' : 'text-gray-500'}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+            <ChevronDown class="w-4 h-4 {$darkMode ? 'text-gray-400' : 'text-gray-500'}" />
           </div>
         </div>
       </div>
@@ -280,7 +308,7 @@
             <div class="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none w-5 h-2 rounded" style="background-color: {selectedEdgeType.colour}"></div>
           {/if}
           <div class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
-            <svg class="w-4 h-4 {$darkMode ? 'text-gray-400' : 'text-gray-500'}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+            <ChevronDown class="w-4 h-4 {$darkMode ? 'text-gray-400' : 'text-gray-500'}" />
           </div>
         </div>
       </div>
@@ -295,6 +323,19 @@
           min="0.5"
           step="0.5"
           on:input={(e) => updateEdgeField('weight', parseFloat(e.currentTarget.value) || 1)}
+          class="w-full px-4 py-3 border rounded-xl transition-all {$darkMode ? 'bg-gray-800 border-gray-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-800'} focus:ring-2 focus:ring-purple-500 focus:outline-none"
+        />
+      </div>
+      
+      <!-- Edge Label -->
+      <div>
+        <label for="edge-label" class="block text-xs font-semibold mb-1.5 uppercase tracking-wide {$darkMode ? 'text-gray-400' : 'text-gray-500'}">Label (on edge)</label>
+        <input
+          id="edge-label"
+          type="text"
+          value={selectedEdge.label || ''}
+          placeholder="Optional label"
+          on:input={(e) => updateEdgeField('label', e.currentTarget.value)}
           class="w-full px-4 py-3 border rounded-xl transition-all {$darkMode ? 'bg-gray-800 border-gray-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-800'} focus:ring-2 focus:ring-purple-500 focus:outline-none"
         />
       </div>
@@ -382,9 +423,7 @@
 {:else}
   <div class="flex flex-col items-center justify-center h-full text-center p-6">
     <div class="w-20 h-20 rounded-2xl flex items-center justify-center mb-4 {$darkMode ? 'bg-linear-to-br from-gray-800 to-gray-700' : 'bg-linear-to-br from-gray-100 to-gray-200'}">
-      <svg class="w-10 h-10 {$darkMode ? 'text-gray-600' : 'text-gray-400'}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122" />
-      </svg>
+      <MousePointer2 class="w-10 h-10 {$darkMode ? 'text-gray-600' : 'text-gray-400'}" />
     </div>
     <p class="font-bold text-lg {$darkMode ? 'text-gray-300' : 'text-gray-600'}">No Selection</p>
     <p class="text-sm mt-2 max-w-[200px] {$darkMode ? 'text-gray-500' : 'text-gray-400'}">Click a node or edge on the canvas to view and edit its properties</p>

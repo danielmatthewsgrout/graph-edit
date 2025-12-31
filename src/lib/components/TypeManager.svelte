@@ -1,7 +1,10 @@
 <script lang="ts">
   import { graphData, activeNodeType, activeEdgeType, darkMode } from '../stores';
-  import { NODE_ICONS, type NodeIcon } from '../types';
+  import { NODE_ICONS, type NodeIcon, type EdgeLineStyle } from '../types';
   import NodeIconComponent from './NodeIcon.svelte';
+  import { Tag, ChevronDown, Link } from 'lucide-svelte';
+
+  const EDGE_LINE_STYLES: EdgeLineStyle[] = ['solid', 'dashed', 'dotted', 'dashdot'];
 
   let newNodeTypeId = '';
   let newNodeTypeLabel = '';
@@ -10,6 +13,7 @@
   let newEdgeTypeId = '';
   let newEdgeTypeLabel = '';
   let newEdgeTypeColor = '#22c55e';
+  let newEdgeTypeStyle: EdgeLineStyle = 'solid';
   let editingNodeType: string | null = null;
   let editingEdgeType: string | null = null;
   let nodeTypesExpanded = false;
@@ -49,7 +53,8 @@
       if (!data.edge_types[id]) {
         data.edge_types[id] = {
           colour: newEdgeTypeColor,
-          label: newEdgeTypeLabel
+          label: newEdgeTypeLabel,
+          line_style: newEdgeTypeStyle
         };
         activeEdgeType.set(id);
       }
@@ -59,6 +64,7 @@
     newEdgeTypeId = '';
     newEdgeTypeLabel = '';
     newEdgeTypeColor = '#22c55e';
+    newEdgeTypeStyle = 'solid';
   }
 
   function deleteNodeType(typeId: string) {
@@ -96,10 +102,14 @@
     });
   }
 
-  function updateEdgeType(typeId: string, field: 'label' | 'colour', value: string) {
+  function updateEdgeType(typeId: string, field: 'label' | 'colour' | 'line_style', value: string) {
     graphData.update(data => {
       if (data.edge_types[typeId]) {
-        data.edge_types[typeId][field] = value;
+        if (field === 'line_style') {
+          data.edge_types[typeId].line_style = value as EdgeLineStyle;
+        } else {
+          data.edge_types[typeId][field] = value;
+        }
       }
       return data;
     });
@@ -111,7 +121,7 @@
   <div class="rounded-2xl border overflow-hidden shadow-lg {$darkMode ? 'bg-gray-800/80 border-gray-700/50' : 'bg-white border-gray-200'}">
     <div class="px-4 py-3 border-b {$darkMode ? 'bg-linear-to-r from-blue-900/60 to-indigo-900/60 border-gray-700/50' : 'bg-linear-to-r from-blue-50 to-indigo-50 border-blue-100'}">
       <h3 class="font-bold flex items-center gap-2 {$darkMode ? 'text-blue-300' : 'text-blue-800'}">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/></svg>
+        <Tag class="w-5 h-5" />
         Node Types
         <span class="text-xs px-2 py-0.5 rounded-full font-medium {$darkMode ? 'bg-blue-800/60 text-blue-200' : 'bg-blue-200 text-blue-800'}">{Object.keys($graphData.node_types).length}</span>
       </h3>
@@ -137,7 +147,7 @@
             </div>
           {/if}
           <div class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
-            <svg class="w-4 h-4 {$darkMode ? 'text-gray-400' : 'text-gray-500'}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+            <ChevronDown class="w-4 h-4 {$darkMode ? 'text-gray-400' : 'text-gray-500'}" />
           </div>
         </div>
       </div>
@@ -149,7 +159,7 @@
           class="w-full px-3 py-2 flex items-center justify-between text-sm font-medium transition-colors {$darkMode ? 'bg-gray-700/50 hover:bg-gray-700 text-gray-300' : 'bg-gray-50 hover:bg-gray-100 text-gray-600'}"
         >
           <span>Manage Types ({Object.keys($graphData.node_types).length})</span>
-          <svg class="w-4 h-4 transition-transform {nodeTypesExpanded ? 'rotate-180' : ''}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          <ChevronDown class="w-4 h-4 transition-transform {nodeTypesExpanded ? 'rotate-180' : ''}" />
         </button>
         
         {#if nodeTypesExpanded}
@@ -189,6 +199,7 @@
                     value={type.colour}
                     on:input={(e) => updateNodeType(typeId, 'colour', e.currentTarget.value)}
                     class="w-9 h-9 rounded-lg cursor-pointer border-0 p-0"
+                    style="color-scheme: {$darkMode ? 'dark' : 'light'}"
                   />
                   <select
                     value={type.icon || 'circle'}
@@ -219,7 +230,12 @@
             class="w-full px-3 py-2 text-sm border rounded-lg {$darkMode ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-500' : 'bg-white border-gray-200 placeholder-gray-400'} focus:ring-2 focus:ring-blue-500 focus:outline-none"
           />
           <div class="flex gap-2">
-            <input type="color" bind:value={newNodeTypeColor} class="w-9 h-9 rounded-lg cursor-pointer border-0 p-0" />
+            <input
+              type="color"
+              bind:value={newNodeTypeColor}
+              class="w-9 h-9 rounded-lg cursor-pointer border-0 p-0"
+              style="color-scheme: {$darkMode ? 'dark' : 'light'}"
+            />
             <select bind:value={newNodeTypeIcon} class="flex-1 px-2 py-1 text-xs rounded-lg border {$darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-200'}">
               {#each NODE_ICONS as icon}
                 <option value={icon}>{icon}</option>
@@ -228,7 +244,7 @@
             <button
               on:click={createNodeType}
               disabled={!newNodeTypeLabel}
-              class="px-4 py-2 rounded-lg text-sm font-medium transition-all disabled:opacity-50 bg-blue-500 hover:bg-blue-600 text-white"
+              class="w-24 px-4 py-2 rounded-lg text-sm font-medium transition-all disabled:opacity-50 bg-blue-500 hover:bg-blue-600 text-white text-center"
             >+ Add</button>
           </div>
         </div>
@@ -240,7 +256,7 @@
   <div class="rounded-2xl border overflow-hidden shadow-lg {$darkMode ? 'bg-gray-800/80 border-gray-700/50' : 'bg-white border-gray-200'}">
     <div class="px-4 py-3 border-b {$darkMode ? 'bg-linear-to-r from-green-900/60 to-emerald-900/60 border-gray-700/50' : 'bg-linear-to-r from-green-50 to-emerald-50 border-green-100'}">
       <h3 class="font-bold flex items-center gap-2 {$darkMode ? 'text-green-300' : 'text-green-800'}">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
+        <Link class="w-5 h-5" />
         Edge Types
         <span class="text-xs px-2 py-0.5 rounded-full font-medium {$darkMode ? 'bg-green-800/60 text-green-200' : 'bg-green-200 text-green-800'}">{Object.keys($graphData.edge_types).length}</span>
       </h3>
@@ -264,7 +280,7 @@
             <div class="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none w-5 h-2 rounded" style="background-color: {$graphData.edge_types[$activeEdgeType].colour}"></div>
           {/if}
           <div class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
-            <svg class="w-4 h-4 {$darkMode ? 'text-gray-400' : 'text-gray-500'}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+            <ChevronDown class="w-4 h-4 {$darkMode ? 'text-gray-400' : 'text-gray-500'}" />
           </div>
         </div>
       </div>
@@ -276,12 +292,12 @@
           class="w-full px-3 py-2 flex items-center justify-between text-sm font-medium transition-colors {$darkMode ? 'bg-gray-700/50 hover:bg-gray-700 text-gray-300' : 'bg-gray-50 hover:bg-gray-100 text-gray-600'}"
         >
           <span>Manage Types ({Object.keys($graphData.edge_types).length})</span>
-          <svg class="w-4 h-4 transition-transform {edgeTypesExpanded ? 'rotate-180' : ''}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          <ChevronDown class="w-4 h-4 transition-transform {edgeTypesExpanded ? 'rotate-180' : ''}" />
         </button>
         
         {#if edgeTypesExpanded}
           <div class="p-2 space-y-2 {$darkMode ? 'bg-gray-800/50' : 'bg-gray-50/50'}">
-            {#each Object.entries($graphData.edge_types) as [typeId, type]}
+              {#each Object.entries($graphData.edge_types) as [typeId, type]}
               <div class="p-2 rounded-lg border transition-all {$darkMode ? 'bg-gray-700/50 border-gray-600/50 hover:bg-gray-700' : 'bg-white border-gray-200 hover:shadow-sm'}">
                 <div class="flex items-center gap-2">
                   <input
@@ -289,6 +305,7 @@
                     value={type.colour}
                     on:input={(e) => updateEdgeType(typeId, 'colour', e.currentTarget.value)}
                     class="w-9 h-9 rounded-lg cursor-pointer border-0 p-0 shrink-0"
+                    style="color-scheme: {$darkMode ? 'dark' : 'light'}"
                   />
                   <div class="flex-1 min-w-0">
                     {#if editingEdgeType === typeId}
@@ -315,6 +332,17 @@
                     class="w-7 h-7 flex items-center justify-center rounded-lg text-red-500 hover:bg-red-500/20 transition-colors"
                   >✕</button>
                 </div>
+                <div class="mt-2">
+                  <select
+                    value={type.line_style || 'solid'}
+                    on:change={(e) => updateEdgeType(typeId, 'line_style', e.currentTarget.value)}
+                    class="flex-1 h-9 px-2 text-xs rounded-lg border {$darkMode ? 'bg-gray-600 border-gray-500 text-white' : 'bg-white border-gray-200'}"
+                  >
+                    {#each EDGE_LINE_STYLES as style}
+                      <option value={style}>{style}</option>
+                    {/each}
+                  </select>
+                </div>
               </div>
             {/each}
             
@@ -333,12 +361,22 @@
             bind:value={newEdgeTypeLabel}
             class="w-full px-3 py-2 text-sm border rounded-lg {$darkMode ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-500' : 'bg-white border-gray-200 placeholder-gray-400'} focus:ring-2 focus:ring-green-500 focus:outline-none"
           />
-          <div class="flex gap-2">
-            <input type="color" bind:value={newEdgeTypeColor} class="w-9 h-9 rounded-lg cursor-pointer border-0 p-0 shrink-0" />
+          <div class="flex gap-2 items-center">
+            <input
+              type="color"
+              bind:value={newEdgeTypeColor}
+              class="w-9 h-9 rounded-lg cursor-pointer border-0 p-0 shrink-0"
+              style="color-scheme: {$darkMode ? 'dark' : 'light'}"
+            />
+            <select bind:value={newEdgeTypeStyle} class="flex-1 h-9 px-2 text-xs rounded-lg border {$darkMode ? 'bg-gray-700 border-gray-600 text-white' : 'bg-white border-gray-200'}">
+              {#each EDGE_LINE_STYLES as style}
+                <option value={style}>{style}</option>
+              {/each}
+            </select>
             <button
               on:click={createEdgeType}
               disabled={!newEdgeTypeLabel}
-              class="flex-1 h-9 rounded-lg text-sm font-medium transition-all disabled:opacity-50 bg-green-500 hover:bg-green-600 text-white"
+              class="w-24 h-9 rounded-lg text-sm font-medium transition-all disabled:opacity-50 bg-green-500 hover:bg-green-600 text-white text-center"
             >+ Add</button>
           </div>
         </div>

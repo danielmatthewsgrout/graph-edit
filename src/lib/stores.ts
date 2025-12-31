@@ -1,4 +1,4 @@
-import { writable } from 'svelte/store';
+import { writable, get } from 'svelte/store';
 import { browser } from '$app/environment';
 import type { GraphData } from './types';
 
@@ -18,7 +18,8 @@ const defaultGraphData: GraphData = {
   edge_types: {
     edge_type_1: {
       colour: '#22c55e',
-      label: 'Knows'
+      label: 'Knows',
+      line_style: 'solid'
     }
   },
   nodes: {},
@@ -55,6 +56,8 @@ export const darkMode = createPersistentStore<boolean>('graphedit-darkmode', tru
 
 export const selectedNodeId = writable<string | null>(null);
 export const selectedEdgeId = writable<string | null>(null);
+export const selectedNodeIds = writable<string[]>([]);
+export const selectedEdgeIds = writable<string[]>([]);
 export const activeNodeType = writable<string>('node_type_1');
 export const activeEdgeType = writable<string>('edge_type_1');
 export const isDragging = writable<boolean>(false);
@@ -62,13 +65,61 @@ export const isCreatingEdge = writable<boolean>(false);
 export const edgeStartNode = writable<string | null>(null);
 export const canvasZoom = createPersistentStore<number>('graphedit-zoom', 1);
 export const canvasPan = createPersistentStore<{ x: number; y: number }>('graphedit-pan', { x: 0, y: 0 });
+export const snapToGrid = createPersistentStore<boolean>('graphedit-snap', false);
+export const magnetRadius = createPersistentStore<number>('graphedit-magnet', 12);
+export const undoStack = writable<GraphData[]>([]);
+export const redoStack = writable<GraphData[]>([]);
 
 export function resetGraph() {
   graphData.set(JSON.parse(JSON.stringify(defaultGraphData)));
   selectedNodeId.set(null);
   selectedEdgeId.set(null);
+  selectedNodeIds.set([]);
+  selectedEdgeIds.set([]);
   canvasZoom.set(1);
   canvasPan.set({ x: 0, y: 0 });
+  undoStack.set([]);
+  redoStack.set([]);
+}
+
+export function pushHistory() {
+  if (!browser) return;
+  const snapshot = JSON.parse(JSON.stringify(get(graphData)));
+  undoStack.update((stack) => {
+    const next = [...stack, snapshot];
+    return next.slice(-50);
+  });
+  redoStack.set([]);
+}
+
+export function undo() {
+  if (!browser) return;
+  const current = JSON.parse(JSON.stringify(get(graphData)));
+  let prev: GraphData | undefined;
+  undoStack.update((stack) => {
+    const copy = [...stack];
+    prev = copy.pop();
+    return copy;
+  });
+  if (prev) {
+    redoStack.update((stack) => [...stack, current].slice(-50));
+    graphData.set(prev);
+  }
+}
+
+export function redo() {
+  if (!browser) return;
+  const current = JSON.parse(JSON.stringify(get(graphData)));
+  let next: GraphData | undefined;
+  redoStack.update((stack) => {
+    const copy = [...stack];
+    next = copy.pop();
+    return copy;
+  });
+  if (next) {
+    undoStack.update((stack) => [...stack, current].slice(-50));
+    graphData.set(next);
+  }
 }
 
 export { defaultGraphData };

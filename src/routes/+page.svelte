@@ -3,7 +3,11 @@
   import TypeManager from '$lib/components/TypeManager.svelte';
   import PropertiesEditor from '$lib/components/PropertiesEditor.svelte';
   import ImportExport from '$lib/components/ImportExport.svelte';
+  import CanvasToolbar from '$lib/components/CanvasToolbar.svelte';
+  import GraphStatistics from '$lib/components/GraphStatistics.svelte';
   import { darkMode, graphData } from '$lib/stores';
+  
+  let graphCanvas: GraphCanvas;
   
   $: nodeCount = Object.keys($graphData.nodes).length;
   $: edgeCount = Object.keys($graphData.edges).length;
@@ -27,8 +31,9 @@
         Type Palette
       </h2>
     </div>
-    <div class="flex-1 overflow-y-auto p-4 custom-scrollbar">
+    <div class="flex-1 overflow-y-auto p-4 custom-scrollbar space-y-4">
       <TypeManager />
+      <GraphStatistics />
     </div>
   </aside>
   
@@ -44,7 +49,7 @@
       {/if}
       
       <div class="relative z-10 p-4">
-        <div class="flex items-center justify-between gap-4">
+        <div class="flex items-center justify-between gap-4 mb-3">
           <div class="flex items-center gap-4 min-w-0">
             <div class="relative">
               <div class="w-14 h-14 rounded-2xl bg-linear-to-br from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center shadow-lg shadow-indigo-500/30 transform hover:scale-105 transition-transform">
@@ -74,12 +79,28 @@
           </div>
           <ImportExport />
         </div>
+        {#if graphCanvas}
+          <div class="flex items-center justify-end">
+            <CanvasToolbar
+              onAddNode={graphCanvas.api.addNode}
+              onZoomIn={graphCanvas.api.zoomIn}
+              onZoomOut={graphCanvas.api.zoomOut}
+              onResetZoom={graphCanvas.api.resetZoom}
+              onCenterView={graphCanvas.api.centerView}
+              onExportSVG={graphCanvas.api.exportSVG}
+              onExportPNG={graphCanvas.api.exportPNG}
+              onValidate={graphCanvas.api.applyValidation}
+              onCopy={graphCanvas.api.copy}
+              onPaste={graphCanvas.api.paste}
+            />
+          </div>
+        {/if}
       </div>
     </header>
     
     <!-- Canvas -->
     <div class="flex-1 relative overflow-hidden">
-      <GraphCanvas />
+      <GraphCanvas bind:this={graphCanvas} />
     </div>
   </main>
   

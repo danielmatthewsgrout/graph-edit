@@ -1,5 +1,6 @@
 export type HexColor = string;
 export type NodeIcon = 'circle' | 'square' | 'diamond' | 'star' | 'hexagon' | 'triangle' | 'user' | 'building' | 'folder' | 'file' | 'database' | 'server' | 'globe' | 'heart' | 'zap' | 'shield';
+export type EdgeLineStyle = 'solid' | 'dashed' | 'dotted' | 'dashdot';
 
 export const NODE_ICONS: NodeIcon[] = ['circle', 'square', 'diamond', 'star', 'hexagon', 'triangle', 'user', 'building', 'folder', 'file', 'database', 'server', 'globe', 'heart', 'zap', 'shield'];
 
@@ -12,11 +13,13 @@ export interface NodeType {
 export interface EdgeType {
   colour: HexColor;
   label: string;
+  line_style?: EdgeLineStyle;
 }
 
 export interface Node {
   node_type: string;
   label: string;
+  badge?: string;
   properties: Record<string, string>;
   layout_properties: {
     x_pos: number;
@@ -29,6 +32,8 @@ export interface Edge {
   to_node: string;
   edge_type: string;
   weight: number;
+  line_style?: EdgeLineStyle;
+  label?: string;
   properties: Record<string, string>;
 }
 
