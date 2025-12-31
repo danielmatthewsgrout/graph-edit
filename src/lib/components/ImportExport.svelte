@@ -126,7 +126,7 @@
   </button>
   
   <a
-    href="https://github.com/danielmatthewsgrout/graphedit"
+    href="https://github.com/danielmatthewsgrout/graph-edit"
     target="_blank"
     rel="noopener noreferrer"
     class="w-11 h-11 rounded-xl flex items-center justify-center transition-all transform hover:scale-105 active:scale-95 shadow-lg {$darkMode ? 'bg-gray-700 hover:bg-gray-600 text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-700'}"

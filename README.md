@@ -15,7 +15,7 @@
 
 <br />
 
-[**Report Bug**](https://github.com/danielmatthewsgrout/graphedit/issues) · [**Request Feature**](https://github.com/danielmatthewsgrout/graphedit/issues)
+[**Report Bug**](https://github.com/danielmatthewsgrout/graph-edit/issues) · [**Request Feature**](https://github.com/danielmatthewsgrout/graph-edit/issues)
 
 </div>
 
