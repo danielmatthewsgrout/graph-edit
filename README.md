@@ -69,8 +69,8 @@
 
 ```bash
 # Clone the repository
-git clone https://github.com/danielmatthewsgrout/graphedit.git
-cd graphedit
+git clone https://github.com/danielmatthewsgrout/graph-edit.git
+cd graph-edit
 
 # Install dependencies
 npm install
