@@ -1,20 +1,26 @@
-FROM dhi.io/node:25-debian13-dev AS builder
+FROM node:25-slim AS builder
 
 USER root
+
 WORKDIR /app
+
+RUN npm install -g pnpm
 RUN chown -R node:node /app
 
 USER node
-COPY --chown=node:node package*.json ./
-RUN npm ci
+
+ENV CI=true
+
+COPY --chown=node:node package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+RUN pnpm install --frozen-lockfile
 
 COPY --chown=node:node . .
-RUN npm run build
 
-# Install production dependencies only
-RUN rm -rf node_modules && npm ci --omit=dev
+RUN pnpm install --frozen-lockfile
+RUN pnpm prepare
+RUN pnpm build
 
-FROM dhi.io/node:25-debian13
+FROM node:25-slim
 
 WORKDIR /app
 ENV NODE_ENV=production
@@ -23,6 +29,7 @@ ENV NODE_ENV=production
 COPY --chown=node:node --from=builder /app/build ./build
 COPY --chown=node:node --from=builder /app/node_modules ./node_modules
 COPY --chown=node:node --from=builder /app/package*.json ./
+COPY --chown=node:node --from=builder /app/pnpm-lock.yaml ./
 
 USER node
 

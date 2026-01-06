@@ -1,0 +1,17 @@
+build
+.svelte-kit
+node_modules
+.git
+.gitignore
+.env
+.env.local
+.env.*.local
+*.log
+.DS_Store
+dist
+coverage
+.vscode
+.idea
+*.swp
+*.swo
+*~
