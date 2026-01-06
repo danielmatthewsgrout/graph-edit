@@ -21,58 +21,6 @@
 
 ---
 
-## ✨ Features
-
-### 🎨 Rich Graph Visualisation
-- **16 Node Shapes** — Circle, square, diamond, star, hexagon, triangle, user, building, database, server, globe, and more
-- **Customisable Colours** — Full colour picker for nodes and edges with live preview
-- **Weighted Edges** — Visual thickness scales with weight values
-- **Line Styles** — Solid, dashed, dotted, and dash-dot edges per edge type
-- **Directed Arrows** — Clear directional indicators with coloured arrowheads
-- **Multi-Edge Support** — Automatic curve offsetting for parallel edges
-
-### 🖱️ Intuitive Interactions
-- **Drag & Drop** — Click and drag nodes to reposition
-- **Zoom & Pan** — Mouse wheel to zoom, middle-drag to pan
-- **Quick Node Creation** — Double-click canvas or use the Add button
-- **Easy Edge Creation** — Right-click a node to start, click another to connect
-- **Visual Selection** — Glowing highlight effects for selected items
-- **Centre View** — One-click button to centre all nodes in view
-- **Multi-select** — Shift/Ctrl click to select multiple nodes or edges
-- **Copy & Paste** — Duplicate selected nodes and edges with keyboard shortcuts
-- **Minimap** — Navigate large graphs with an interactive overview map
-- **Snap to Grid** — Optional grid alignment for precise node positioning
-
-### 🎛️ Type Management
-- **Collapsible Panels** — Clean interface with expandable type lists
-- **Smart Dropdowns** — Type selectors show icon and colour preview inline
-- **Edge Styles** — Choose edge line styles (solid/dashed/dotted/dash-dot) per type
-- **Live Preview** — See type changes reflected immediately on canvas
-- **Active Type Selection** — New items use the currently selected type
-
-### 📝 Properties Inspector
-- **Edit Labels** — Rename nodes with instant updates
-- **Change Types** — Dropdown with icon and colour preview
-- **Custom Properties** — Add unlimited key-value metadata
-- **Weight Control** — Adjust edge thickness in real-time
-- **Edge Styling** — Quick controls for weight and line style on selected edges
-
-### 📊 Graph Analytics
-- **Statistics Panel** — Real-time metrics including node/edge counts, connectivity, and degree statistics
-- **Type Distribution** — See counts for each node and edge type
-- **Graph Health** — Identify isolated nodes and connectivity metrics
-
-### 💾 Data Persistence & Export
-- **Auto-Save** — Graph, camera position (pan/zoom), and theme saved to browser storage
-- **JSON Export** — Download your graph as a `.json` file
-- **JSON Import** — Load existing graphs from files
-- **New Graph** — Reset with confirmation
-- **SVG/PNG Export** — One-click export of the current canvas
-- **Graph Validation** — Clean up invalid edges and missing node references
-
-
----
-
 ## 🚀 Quick Start
 
 ### Prerequisites
