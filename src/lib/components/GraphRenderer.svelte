@@ -155,7 +155,7 @@
           style="filter: {isSelected ? 'url(#glow)' : 'url(#shadow)'}"
         />
       {:else}
-        <g transform="scale(1.5)">
+        <g transform="translate(-12, -12) scale(1.5)">
           <path
             d={iconPath}
             fill={nodeType?.colour || '#ccc'}
