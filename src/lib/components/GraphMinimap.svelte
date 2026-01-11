@@ -128,6 +128,7 @@
       role="button"
       tabindex="0"
       aria-label="Minimap - click and drag to navigate the graph viewport"
+      on:click={handleMinimapClick}
       on:mousedown={handleMinimapMouseDown}
       on:mousemove={handleMinimapMouseMove}
       on:mouseup={handleMinimapMouseUp}

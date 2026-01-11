@@ -1,5 +1,8 @@
 <script lang="ts">
   import { graphData, darkMode } from '../stores';
+  import { ChevronDown, ChevronRight } from 'lucide-svelte';
+  
+  let isCollapsed = true;
   
   $: stats = calculateStats();
   
@@ -50,12 +53,22 @@
 </script>
 
 <div class="rounded-2xl border overflow-hidden shadow-lg {$darkMode ? 'bg-gray-800/80 border-gray-700/50' : 'bg-white border-gray-200'}">
-  <div class="px-4 py-3 border-b {$darkMode ? 'border-gray-700 bg-linear-to-r from-indigo-900/60 to-purple-900/60' : 'border-gray-200 bg-linear-to-r from-indigo-50 to-purple-50'}">
+  <button
+    type="button"
+    on:click={() => isCollapsed = !isCollapsed}
+    class="w-full px-4 py-3 border-b {$darkMode ? 'border-gray-700 bg-linear-to-r from-indigo-900/60 to-purple-900/60' : 'border-gray-200 bg-linear-to-r from-indigo-50 to-purple-50'} hover:opacity-80 transition-opacity cursor-pointer"
+  >
     <h3 class="font-bold flex items-center gap-2 {$darkMode ? 'text-indigo-300' : 'text-indigo-800'}">
+      {#if isCollapsed}
+        <ChevronRight size={20} />
+      {:else}
+        <ChevronDown size={20} />
+      {/if}
       <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
       Graph Statistics
     </h3>
-  </div>
+  </button>
+  {#if !isCollapsed}
   <div class="p-4 space-y-3">
     <div class="grid grid-cols-2 gap-3">
       <div class="rounded-lg p-3 {$darkMode ? 'bg-gray-700/50' : 'bg-gray-50'}">
@@ -91,4 +104,5 @@
       </div>
     </div>
   </div>
+  {/if}
 </div>

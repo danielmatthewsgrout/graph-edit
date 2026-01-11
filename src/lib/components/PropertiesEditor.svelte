@@ -3,9 +3,45 @@
   import { NODE_ICONS } from '../types';
   import NodeIconComponent from './NodeIcon.svelte';
   import { ChevronDown, MousePointer2 } from 'lucide-svelte';
+  import { onMount } from 'svelte';
 
   let newPropertyKey = '';
   let newPropertyValue = '';
+  let emojiPickerOpen = false;
+  let emojiPickerButton: HTMLButtonElement;
+  let emojiPickerPopup: HTMLDivElement;
+  
+  const commonEmojis = [
+    '⭐', '🎯', '🔥', '💎', '🚀', '✨', '💡', '🎉',
+    '✅', '❌', '⚠️', '🔒', '🔓', '📌', '📍', '🎨',
+    '💻', '📱', '🌐', '⚡', '🌟', '💪', '🎪', '🏆',
+    '🔑', '📊', '📈', '📉', '💼', '🎁', '🎊', '🌈'
+  ];
+  
+  function selectEmoji(emoji: string) {
+    updateNodeField('badge', emoji);
+    emojiPickerOpen = false;
+  }
+  
+  function clearBadge() {
+    updateNodeField('badge', '');
+    emojiPickerOpen = false;
+  }
+  
+  onMount(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (emojiPickerOpen && event.target) {
+        const target = event.target as Node;
+        if (emojiPickerButton && !emojiPickerButton.contains(target) && 
+            emojiPickerPopup && !emojiPickerPopup.contains(target)) {
+          emojiPickerOpen = false;
+        }
+      }
+    }
+    
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  });
 
   $: selectedNode = $selectedNodeId ? $graphData.nodes[$selectedNodeId] : null;
   $: selectedEdge = $selectedEdgeId ? $graphData.edges[$selectedEdgeId] : null;
@@ -172,17 +208,49 @@
       </div>
       
       <!-- Badge -->
-      <div>
+      <div class="relative">
         <label for="node-badge" class="block text-xs font-semibold mb-1.5 uppercase tracking-wide {$darkMode ? 'text-gray-400' : 'text-gray-500'}">Badge (emoji)</label>
-        <input
+        <button
+          bind:this={emojiPickerButton}
           id="node-badge"
-          type="text"
-          value={selectedNode.badge || ''}
-          placeholder="e.g. ⭐ 🎯 🔥"
-          maxlength="2"
-          on:input={(e) => updateNodeField('badge', e.currentTarget.value)}
-          class="w-full px-4 py-3 border rounded-xl transition-all text-center text-xl {$darkMode ? 'bg-gray-800 border-gray-700 text-white' : 'bg-gray-50 border-gray-200 text-gray-800'} focus:ring-2 focus:ring-purple-500 focus:outline-none"
-        />
+          type="button"
+          on:click={() => emojiPickerOpen = !emojiPickerOpen}
+          class="w-full px-4 py-3 border rounded-xl transition-all text-center text-xl min-h-[48px] flex items-center justify-center gap-2 {$darkMode ? 'bg-gray-800 border-gray-700 text-white hover:bg-gray-700' : 'bg-gray-50 border-gray-200 text-gray-800 hover:bg-gray-100'} focus:ring-2 focus:ring-purple-500 focus:outline-none"
+        >
+          {#if selectedNode.badge}
+            <span class="text-2xl">{selectedNode.badge}</span>
+            <button
+              on:click|stopPropagation={() => clearBadge()}
+              class="ml-auto text-xs px-2 py-1 rounded hover:bg-red-500/20 text-red-500"
+            >
+              Clear
+            </button>
+          {:else}
+            <span class="{$darkMode ? 'text-gray-500' : 'text-gray-400'}">Click to select emoji</span>
+          {/if}
+        </button>
+        
+        {#if emojiPickerOpen}
+          <div 
+            bind:this={emojiPickerPopup}
+            class="absolute z-50 mt-2 w-full max-w-sm {$darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border rounded-xl shadow-2xl p-4 max-h-64 overflow-y-auto"
+            role="dialog"
+            aria-label="Emoji picker"
+          >
+            <div class="grid grid-cols-8 gap-2">
+              {#each commonEmojis as emoji}
+                <button
+                  type="button"
+                  on:click={() => selectEmoji(emoji)}
+                  class="w-10 h-10 flex items-center justify-center text-2xl rounded-lg hover:bg-purple-500/20 transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  aria-label="Select emoji {emoji}"
+                >
+                  {emoji}
+                </button>
+              {/each}
+            </div>
+          </div>
+        {/if}
       </div>
       
       <!-- Node Type with Icon Preview -->

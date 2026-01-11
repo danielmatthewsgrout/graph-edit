@@ -195,8 +195,8 @@
           const dy = mousePos.y - dragOffset.y - start.y;
           const nextX = applySnap(start.x + dx);
           const nextY = applySnap(start.y + dy);
-          node.layout_properties.x_pos = Math.max(30, nextX);
-          node.layout_properties.y_pos = Math.max(30, nextY);
+          node.layout_properties.x_pos = nextX;
+          node.layout_properties.y_pos = nextY;
         });
         return data;
       });
