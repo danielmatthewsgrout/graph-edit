@@ -110,6 +110,18 @@
   function handleMinimapMouseUp() {
     isDraggingMinimap = false;
   }
+
+  function handleMinimapKeyDown(event: KeyboardEvent) {
+    if (event.key !== 'Enter' && event.key !== ' ') return;
+    event.preventDefault();
+    if (!minimapElement) return;
+    const rect = minimapElement.getBoundingClientRect();
+    const clickEvent = new MouseEvent('click', {
+      clientX: rect.left + rect.width / 2,
+      clientY: rect.top + rect.height / 2
+    });
+    handleMinimapClick(clickEvent);
+  }
 </script>
 
 <div 
@@ -128,7 +140,7 @@
       role="button"
       tabindex="0"
       aria-label="Minimap - click and drag to navigate the graph viewport"
-      on:click={handleMinimapClick}
+      on:keydown={handleMinimapKeyDown}
       on:mousedown={handleMinimapMouseDown}
       on:mousemove={handleMinimapMouseMove}
       on:mouseup={handleMinimapMouseUp}

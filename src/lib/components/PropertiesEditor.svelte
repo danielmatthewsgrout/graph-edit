@@ -219,12 +219,15 @@
         >
           {#if selectedNode.badge}
             <span class="text-2xl">{selectedNode.badge}</span>
-            <button
+            <span
+              role="button"
+              tabindex="0"
               on:click|stopPropagation={() => clearBadge()}
+              on:keydown|stopPropagation={(e) => (e.key === 'Enter' || e.key === ' ') && clearBadge()}
               class="ml-auto text-xs px-2 py-1 rounded hover:bg-red-500/20 text-red-500"
             >
               Clear
-            </button>
+            </span>
           {:else}
             <span class="{$darkMode ? 'text-gray-500' : 'text-gray-400'}">Click to select emoji</span>
           {/if}
