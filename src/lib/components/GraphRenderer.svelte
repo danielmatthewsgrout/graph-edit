@@ -4,15 +4,22 @@
   import { get } from 'svelte/store';
   import { getIconPath } from '../utils/iconPaths';
 
-  export let mousePos: { x: number; y: number };
-  export let getNodePosition: (nodeId: string) => { x: number; y: number };
-  export let getEdgePath: (edge: Edge, allEdges: Record<string, Edge>, edgeId: string) => string;
-  export let getEdgeCurveOffset: (edgeId: string, allEdges: Record<string, Edge>) => number;
-  export let getDashArray: (style: EdgeLineStyle | undefined) => string | undefined;
-  export let handleNodeMouseDown: (nodeId: string, event: MouseEvent) => void;
-  export let handleNodeClick: (nodeId: string, event: MouseEvent) => void;
-  export let startEdgeCreation: (nodeId: string, event: MouseEvent) => void;
-  export let handleEdgeClick: (edgeId: string, event: MouseEvent) => void;
+  interface Props {
+    mousePos: { x: number; y: number };
+    getNodePosition: (nodeId: string) => { x: number; y: number };
+    getEdgePath: (edge: Edge, allEdges: Record<string, Edge>, edgeId: string) => string;
+    getEdgeCurveOffset: (edgeId: string, allEdges: Record<string, Edge>) => number;
+    getDashArray: (style: EdgeLineStyle | undefined) => string | undefined;
+    handleNodeMouseDown: (nodeId: string, event: MouseEvent) => void;
+    handleNodeClick: (nodeId: string, event: MouseEvent) => void;
+    startEdgeCreation: (nodeId: string, event: MouseEvent) => void;
+    handleEdgeClick: (edgeId: string, event: MouseEvent) => void;
+  }
+
+  let {
+    mousePos, getNodePosition, getEdgePath, getEdgeCurveOffset, getDashArray,
+    handleNodeMouseDown, handleNodeClick, startEdgeCreation, handleEdgeClick
+  }: Props = $props();
 </script>
 
 <defs>
@@ -40,18 +47,27 @@
   <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
     <feDropShadow dx="0" dy="3" stdDeviation="4" flood-opacity="0.3"/>
   </filter>
+  <linearGradient id="edge-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+    <stop offset="0%" stop-color="#3b82f6" />
+    <stop offset="100%" stop-color="#8b5cf6" />
+  </linearGradient>
+  <linearGradient id="pulse-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+    <stop offset="0%" stop-color="#3b82f6" />
+    <stop offset="50%" stop-color="#8b5cf6" />
+    <stop offset="100%" stop-color="#ec4899" />
+  </linearGradient>
 </defs>
 
 <g transform="scale({$canvasZoom}) translate({$canvasPan.x}, {$canvasPan.y})">
   <rect x="-5000" y="-5000" width="10000" height="10000" fill="transparent" />
-  
+
   {#each Object.entries($graphData.edges) as [edgeId, edge]}
     {@const edgeType = $graphData.edge_types[edge.edge_type]}
     {@const lineStyle = edgeType?.line_style || 'solid'}
     {@const dashArray = getDashArray(lineStyle)}
     {@const isSelected = $selectedEdgeId === edgeId || $selectedEdgeIds.includes(edgeId)}
     {@const path = getEdgePath(edge, $graphData.edges, edgeId)}
-    
+
     <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
     <path
       d={path}
@@ -60,7 +76,7 @@
       fill="none"
       class="cursor-pointer"
       stroke-dasharray={dashArray}
-      on:click={(e) => handleEdgeClick(edgeId, e)}
+      onclick={(e) => handleEdgeClick(edgeId, e)}
     />
     <path
       d={path}
@@ -117,21 +133,21 @@
       </text>
     {/if}
   {/each}
-  
+
   {#each Object.entries($graphData.nodes) as [nodeId, node]}
     {@const nodeType = $graphData.node_types[node.node_type]}
     {@const isSelected = $selectedNodeId === nodeId || $selectedNodeIds.includes(nodeId)}
     {@const pos = node.layout_properties}
     {@const icon = nodeType?.icon || 'circle'}
     {@const iconPath = getIconPath(icon)}
-    
+
     <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
-    <g 
+    <g
       transform="translate({pos.x_pos}, {pos.y_pos})"
       class="cursor-move"
-      on:mousedown={(e) => handleNodeMouseDown(nodeId, e)}
-      on:click={(e) => handleNodeClick(nodeId, e)}
-      on:contextmenu|preventDefault={(e) => startEdgeCreation(nodeId, e)}
+      onmousedown={(e) => handleNodeMouseDown(nodeId, e)}
+      onclick={(e) => handleNodeClick(nodeId, e)}
+      oncontextmenu={(e) => { e.preventDefault(); startEdgeCreation(nodeId, e); }}
     >
       {#if $isCreatingEdge && $edgeStartNode === nodeId}
         <circle
@@ -145,7 +161,7 @@
           <animate attributeName="opacity" values="1;0.5;1" dur="1s" repeatCount="indefinite" />
         </circle>
       {/if}
-      
+
       {#if icon === 'circle'}
         <circle
           r="28"
@@ -165,7 +181,7 @@
           />
         </g>
       {/if}
-      
+
       {#if node.badge}
         <circle
           cx="20"
@@ -187,7 +203,7 @@
           {node.badge}
         </text>
       {/if}
-      
+
       <text
         x="0"
         y="48"
@@ -200,7 +216,7 @@
       </text>
     </g>
   {/each}
-  
+
   {#if $isCreatingEdge && $edgeStartNode}
     {@const startPos = getNodePosition($edgeStartNode)}
     <line
@@ -226,16 +242,4 @@
       <animate attributeName="r" values="8;12;8" dur="0.5s" repeatCount="indefinite" />
     </circle>
   {/if}
-  
-  <defs>
-    <linearGradient id="edge-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" stop-color="#3b82f6" />
-      <stop offset="100%" stop-color="#8b5cf6" />
-    </linearGradient>
-    <linearGradient id="pulse-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#3b82f6" />
-      <stop offset="50%" stop-color="#8b5cf6" />
-      <stop offset="100%" stop-color="#ec4899" />
-    </linearGradient>
-  </defs>
 </g>

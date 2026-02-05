@@ -1,45 +1,40 @@
 <script lang="ts">
   import { graphData, darkMode } from '../stores';
   import { ChevronDown, ChevronRight } from 'lucide-svelte';
-  
-  let isCollapsed = true;
-  
-  $: stats = calculateStats();
-  
-  function calculateStats() {
-    const nodes = Object.values($graphData.nodes);
+
+  let isCollapsed = $state(true);
+
+  let stats = $derived.by(() => {
+    const nodeEntries = Object.entries($graphData.nodes);
     const edges = Object.values($graphData.edges);
     const nodeTypes = Object.keys($graphData.node_types).length;
     const edgeTypes = Object.keys($graphData.edge_types).length;
-    
+
     const nodeTypeCounts: Record<string, number> = {};
-    nodes.forEach(node => {
+    nodeEntries.forEach(([, node]) => {
       nodeTypeCounts[node.node_type] = (nodeTypeCounts[node.node_type] || 0) + 1;
     });
-    
+
     const edgeTypeCounts: Record<string, number> = {};
     edges.forEach(edge => {
       edgeTypeCounts[edge.edge_type] = (edgeTypeCounts[edge.edge_type] || 0) + 1;
     });
-    
-    const isolatedNodes = nodes.filter(node => {
-      const nodeId = Object.keys($graphData.nodes).find(id => $graphData.nodes[id] === node);
+
+    const isolatedNodes = nodeEntries.filter(([nodeId]) => {
       return !edges.some(e => e.from_node === nodeId || e.to_node === nodeId);
     }).length;
-    
-    const maxDegree = nodes.reduce((max, node) => {
-      const nodeId = Object.keys($graphData.nodes).find(id => $graphData.nodes[id] === node);
-      if (!nodeId) return max;
+
+    const maxDegree = nodeEntries.reduce((max, [nodeId]) => {
       const degree = edges.filter(e => e.from_node === nodeId || e.to_node === nodeId).length;
       return Math.max(max, degree);
     }, 0);
-    
-    const avgDegree = nodes.length > 0 
-      ? (edges.length * 2) / nodes.length 
+
+    const avgDegree = nodeEntries.length > 0
+      ? (edges.length * 2) / nodeEntries.length
       : 0;
-    
+
     return {
-      totalNodes: nodes.length,
+      totalNodes: nodeEntries.length,
       totalEdges: edges.length,
       nodeTypes,
       edgeTypes,
@@ -49,13 +44,13 @@
       nodeTypeCounts,
       edgeTypeCounts
     };
-  }
+  });
 </script>
 
 <div class="rounded-2xl border overflow-hidden shadow-lg {$darkMode ? 'bg-gray-800/80 border-gray-700/50' : 'bg-white border-gray-200'}">
   <button
     type="button"
-    on:click={() => isCollapsed = !isCollapsed}
+    onclick={() => isCollapsed = !isCollapsed}
     class="w-full px-4 py-3 border-b {$darkMode ? 'border-gray-700 bg-linear-to-r from-indigo-900/60 to-purple-900/60' : 'border-gray-200 bg-linear-to-r from-indigo-50 to-purple-50'} hover:opacity-80 transition-opacity cursor-pointer"
   >
     <h3 class="font-bold flex items-center gap-2 {$darkMode ? 'text-indigo-300' : 'text-indigo-800'}">
@@ -88,7 +83,7 @@
         <div class="text-2xl font-bold {$darkMode ? 'text-white' : 'text-gray-900'}">{stats.edgeTypes}</div>
       </div>
     </div>
-    
+
     <div class="space-y-2 pt-2 border-t {$darkMode ? 'border-gray-700' : 'border-gray-200'}">
       <div class="flex justify-between text-sm">
         <span class="{$darkMode ? 'text-gray-400' : 'text-gray-600'}">Isolated Nodes</span>

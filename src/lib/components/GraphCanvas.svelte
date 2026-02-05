@@ -12,19 +12,19 @@
   import { gridLayout, forceDirectedLayout, radialLayout, treeLayout } from '../utils/layoutUtils';
 
   let svgElement: SVGSVGElement;
-  let containerElement: HTMLDivElement;
-  let canvasWidth = 2000;
-  let canvasHeight = 2000;
-  let dragNodeId: string | null = null;
-  let dragStartPositions: Record<string, { x: number; y: number }> = {};
-  let dragOffset = { x: 0, y: 0 };
-  let mousePos = { x: 0, y: 0 };
-  let isPanning = false;
-  let panStart = { x: 0, y: 0 };
-  let searchTerm = '';
-  let showHotkeys = false;
-  let validationMessage = '';
-  let clipboard: { nodes: Record<string, any>; edges: Record<string, any>; offset: { x: number; y: number } } | null = null;
+  let containerElement = $state<HTMLDivElement>() as HTMLDivElement;
+  let canvasWidth = $state(2000);
+  let canvasHeight = $state(2000);
+  let dragNodeId: string | null = $state(null);
+  let dragStartPositions: Record<string, { x: number; y: number }> = $state({});
+  let dragOffset = $state({ x: 0, y: 0 });
+  let mousePos = $state({ x: 0, y: 0 });
+  let isPanning = $state(false);
+  let panStart = $state({ x: 0, y: 0 });
+  let searchTerm = $state('');
+  let showHotkeys = $state(false);
+  let validationMessage = $state('');
+  let clipboard: { nodes: Record<string, any>; edges: Record<string, any>; offset: { x: number; y: number } } | null = $state(null);
 
   export const api = {
     addNode: () => addNode(),
@@ -56,17 +56,17 @@
   function getEdgeCurveOffset(edgeId: string, allEdges: Record<string, Edge>): number {
     const edge = allEdges[edgeId];
     if (!edge) return 0;
-    
-    const samePairEdges = Object.entries(allEdges).filter(([id, e]) => 
+
+    const samePairEdges = Object.entries(allEdges).filter(([id, e]) =>
       (e.from_node === edge.from_node && e.to_node === edge.to_node) ||
       (e.from_node === edge.to_node && e.to_node === edge.from_node)
     );
-    
+
     const currentIndex = samePairEdges.findIndex(([id]) => id === edgeId);
     const total = samePairEdges.length;
-    
+
     if (total <= 1) return 0;
-    
+
     return (currentIndex - (total - 1) / 2) * 30;
   }
 
@@ -74,30 +74,30 @@
     const fromPos = getNodePosition(edge.from_node);
     const toPos = getNodePosition(edge.to_node);
     const offset = getEdgeCurveOffset(edgeId, allEdges);
-    
+
     const dx = toPos.x - fromPos.x;
     const dy = toPos.y - fromPos.y;
     const len = Math.sqrt(dx * dx + dy * dy);
     const normX = len > 0 ? dx / len : 0;
     const normY = len > 0 ? dy / len : 0;
-    
+
     const startX = fromPos.x + normX * 32;
     const startY = fromPos.y + normY * 32;
     const endX = toPos.x - normX * 32;
     const endY = toPos.y - normY * 32;
-    
+
     if (offset === 0) {
       return `M ${startX} ${startY} L ${endX} ${endY}`;
     }
-    
+
     const midX = (startX + endX) / 2;
     const midY = (startY + endY) / 2;
     const perpX = -normY;
     const perpY = normX;
-    
+
     const controlX = midX + perpX * offset;
     const controlY = midY + perpY * offset;
-    
+
     return `M ${startX} ${startY} Q ${controlX} ${controlY} ${endX} ${endY}`;
   }
 
@@ -117,7 +117,7 @@
       canvasPan.set({ x: 0, y: 0 });
       return;
     }
-    
+
     let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
     nodeIds.forEach(id => {
       const node = data.nodes[id];
@@ -126,10 +126,10 @@
       maxX = Math.max(maxX, node.layout_properties.x_pos);
       maxY = Math.max(maxY, node.layout_properties.y_pos);
     });
-    
-    const centerX = (minX + maxX) / 2;
-    const centerY = (minY + maxY) / 2;
-    centerOnNode(centerX, centerY);
+
+    const cx = (minX + maxX) / 2;
+    const cy = (minY + maxY) / 2;
+    centerOnNode(cx, cy);
   }
 
   function handleNodeMouseDown(nodeId: string, event: MouseEvent) {
@@ -137,13 +137,13 @@
       finishEdgeCreation(nodeId);
       return;
     }
-    
+
     event.stopPropagation();
     pushHistory();
     const data = get(graphData);
     const node = data.nodes[nodeId];
     if (!node) return;
-    
+
     const rect = svgElement.getBoundingClientRect();
     const zoom = get(canvasZoom);
     const pan = get(canvasPan);
@@ -172,10 +172,10 @@
     const rect = svgElement.getBoundingClientRect();
     const zoom = get(canvasZoom);
     const pan = get(canvasPan);
-    
+
     mousePos.x = (event.clientX - rect.left) / zoom - pan.x;
     mousePos.y = (event.clientY - rect.top) / zoom - pan.y;
-    
+
     if (isPanning) {
       const dx = event.clientX - panStart.x;
       const dy = event.clientY - panStart.y;
@@ -183,7 +183,7 @@
       panStart = { x: event.clientX, y: event.clientY };
       return;
     }
-    
+
     if (dragNodeId) {
       graphData.update(data => {
         const targets = $selectedNodeIds.length ? $selectedNodeIds : [dragNodeId!];
@@ -213,12 +213,12 @@
 
   function handleNodeClick(nodeId: string, event: MouseEvent) {
     event.stopPropagation();
-    
+
     if ($isCreatingEdge) {
       finishEdgeCreation(nodeId);
       return;
     }
-    
+
     if (event.shiftKey || event.ctrlKey || event.metaKey) {
       const current = new Set($selectedNodeIds);
       current.has(nodeId) ? current.delete(nodeId) : current.add(nodeId);
@@ -287,10 +287,9 @@
   function addNode(x?: number, y?: number) {
     pushHistory();
     const newNodeId = `node_${Date.now()}`;
-    const data = get(graphData);
     const nodeX = x ?? 300;
     const nodeY = y ?? 300;
-    
+
     graphData.update(d => {
       d.nodes[newNodeId] = {
         node_type: get(activeNodeType),
@@ -300,12 +299,12 @@
       };
       return d;
     });
-    
+
     selectedNodeId.set(newNodeId);
     selectedNodeIds.set([newNodeId]);
     selectedEdgeId.set(null);
     selectedEdgeIds.set([]);
-    
+
     setTimeout(() => centerOnNode(nodeX, nodeY), 10);
   }
 
@@ -315,13 +314,13 @@
       edgeStartNode.set(null);
       return;
     }
-    
+
     const rect = svgElement.getBoundingClientRect();
     const zoom = get(canvasZoom);
     const pan = get(canvasPan);
     const x = (event.clientX - rect.left) / zoom - pan.x;
     const y = (event.clientY - rect.top) / zoom - pan.y;
-    
+
     addNode(x, y);
   }
 
@@ -365,12 +364,6 @@
     canvasPan.set({ x: 0, y: 0 });
   }
 
-  function autoLayout() {
-    gridLayout();
-    setTimeout(centerView, 10);
-  }
-
-
   function getDashArray(style: EdgeLineStyle | undefined): string | undefined {
     switch (style) {
       case 'dashed': return '10 6';
@@ -385,7 +378,8 @@
     const missingNodes = new Set<string>();
     const invalidEdges: string[] = [];
     Object.entries(data.edges).forEach(([id, e]) => {
-      if (!data.nodes[e.from_node] || !data.nodes[e.to_node]) missingNodes.add(e.from_node) && missingNodes.add(e.to_node);
+      if (!data.nodes[e.from_node]) missingNodes.add(e.from_node);
+      if (!data.nodes[e.to_node]) missingNodes.add(e.to_node);
       if (!data.edge_types[e.edge_type]) invalidEdges.push(id);
     });
     if (!missingNodes.size && !invalidEdges.length) {
@@ -475,11 +469,11 @@
     const edgeIds = new Set($selectedEdgeIds);
     if (!nodeIds.size && !edgeIds.size && $selectedNodeId) nodeIds.add($selectedNodeId);
     if (!nodeIds.size && !edgeIds.size) return;
-    
+
     const data = get(graphData);
     const copiedNodes: Record<string, any> = {};
     const copiedEdges: Record<string, any> = {};
-    
+
     let minX = Infinity, minY = Infinity;
     nodeIds.forEach(id => {
       const node = data.nodes[id];
@@ -489,35 +483,34 @@
         minY = Math.min(minY, node.layout_properties.y_pos);
       }
     });
-    
+
     edgeIds.forEach(id => {
       const edge = data.edges[id];
       if (edge && nodeIds.has(edge.from_node) && nodeIds.has(edge.to_node)) {
         copiedEdges[id] = JSON.parse(JSON.stringify(edge));
       }
     });
-    
+
     clipboard = {
       nodes: copiedNodes,
       edges: copiedEdges,
       offset: { x: minX, y: minY }
     };
   }
-  
+
   function pasteClipboard() {
     if (!clipboard || Object.keys(clipboard.nodes).length === 0) return;
-    
+
     pushHistory();
-    const data = get(graphData);
     const offsetX = 50;
     const offsetY = 50;
     const newNodeIds: Record<string, string> = {};
     const newEdgeIds: Record<string, string> = {};
     const clip = clipboard;
-    
+
     graphData.update(d => {
       Object.entries(clip.nodes).forEach(([oldId, node]) => {
-        const newId = `node_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        const newId = `node_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
         newNodeIds[oldId] = newId;
         d.nodes[newId] = {
           ...node,
@@ -527,12 +520,12 @@
           }
         };
       });
-      
+
       Object.entries(clip.edges).forEach(([oldId, edge]) => {
         const newFromId = newNodeIds[edge.from_node];
         const newToId = newNodeIds[edge.to_node];
         if (newFromId && newToId) {
-          const newEdgeId = `edge_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+          const newEdgeId = `edge_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
           newEdgeIds[oldId] = newEdgeId;
           d.edges[newEdgeId] = {
             ...edge,
@@ -541,10 +534,10 @@
           };
         }
       });
-      
+
       return d;
     });
-    
+
     const pastedNodeIds = Object.values(newNodeIds);
     selectedNodeIds.set(pastedNodeIds);
     selectedNodeId.set(pastedNodeIds[0] || null);
@@ -576,7 +569,7 @@
     selectedNodeIds.set([]);
     selectedEdgeIds.set([]);
   }
-  
+
   function handleViewportChange(x: number, y: number) {
     canvasPan.set({ x, y });
   }
@@ -617,7 +610,7 @@
   });
 </script>
 
-<div 
+<div
   bind:this={containerElement}
   class="w-full h-full relative overflow-hidden"
   class:cursor-grabbing={isPanning}
@@ -625,11 +618,11 @@
   style="background: {$darkMode ? 'radial-gradient(circle at 50% 50%, #1e293b 0%, #0f172a 100%)' : 'radial-gradient(circle at 50% 50%, #f8fafc 0%, #e2e8f0 100%)'}"
 >
   <div class="absolute inset-0 opacity-30 pointer-events-none" style="background-image: radial-gradient({$darkMode ? '#334155' : '#cbd5e1'} 1px, transparent 1px); background-size: 20px 20px;"></div>
-  
+
   <div class="absolute top-4 left-1/2 -translate-x-1/2 z-10 flex items-center gap-2 flex-wrap justify-center max-w-[90%]">
     <CanvasSearch bind:searchTerm onSearch={searchAndSelect} />
   </div>
-  
+
   {#if validationMessage}
     <div class="absolute top-20 left-1/2 -translate-x-1/2 z-10 px-4 py-2 rounded-lg shadow-lg {$darkMode ? 'bg-gray-800 text-gray-200' : 'bg-white text-gray-700'} text-sm">
       {validationMessage}
@@ -638,16 +631,16 @@
 
   <EdgeStylingPanel />
 
-  <GraphMinimap bind:containerElement onViewportChange={handleViewportChange} />
+  <GraphMinimap {containerElement} onViewportChange={handleViewportChange} />
 
   <KeyboardShortcutsModal bind:show={showHotkeys} onClose={() => showHotkeys = false} />
 
   {#if $isCreatingEdge}
     <div class="absolute top-4 left-1/2 -translate-x-1/2 z-20 px-6 py-3 rounded-full shadow-2xl font-medium bg-linear-to-r from-blue-500 to-cyan-500 text-white animate-pulse">
-      ✨ Creating edge... Click a node to connect or click canvas to cancel
+      Creating edge... Click a node to connect or click canvas to cancel
     </div>
   {/if}
-  
+
   <!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions a11y_no_noninteractive_element_interactions -->
   <svg
     bind:this={svgElement}
@@ -657,14 +650,14 @@
     role="application"
     aria-label="Graph canvas"
     style="cursor: {$isCreatingEdge ? 'crosshair' : isPanning ? 'grabbing' : 'default'}"
-    on:mousemove={handleMouseMove}
-    on:mouseup={handleMouseUp}
-    on:mouseleave={handleMouseUp}
-    on:dblclick={handleCanvasDoubleClick}
-    on:click={handleCanvasClick}
-    on:wheel={handleWheel}
-    on:mousedown={handleMiddleMouseDown}
-    on:contextmenu|preventDefault
+    onmousemove={handleMouseMove}
+    onmouseup={handleMouseUp}
+    onmouseleave={handleMouseUp}
+    ondblclick={handleCanvasDoubleClick}
+    onclick={handleCanvasClick}
+    onwheel={handleWheel}
+    onmousedown={handleMiddleMouseDown}
+    oncontextmenu={(e) => e.preventDefault()}
   >
     <GraphRenderer
       {mousePos}

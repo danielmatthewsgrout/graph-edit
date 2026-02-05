@@ -6,11 +6,11 @@
   import CanvasToolbar from '$lib/components/CanvasToolbar.svelte';
   import GraphStatistics from '$lib/components/GraphStatistics.svelte';
   import { darkMode, graphData } from '$lib/stores';
-  
-  let graphCanvas: GraphCanvas;
-  
-  $: nodeCount = Object.keys($graphData.nodes).length;
-  $: edgeCount = Object.keys($graphData.edges).length;
+
+  let graphCanvas: GraphCanvas | undefined = $state();
+
+  let nodeCount = $derived(Object.keys($graphData.nodes).length);
+  let edgeCount = $derived(Object.keys($graphData.edges).length);
 </script>
 
 <svelte:head>
@@ -19,7 +19,6 @@
 </svelte:head>
 
 <div class="flex h-screen overflow-hidden {$darkMode ? 'bg-gray-950' : 'bg-gray-100'}">
-  <!-- Left Sidebar -->
   <aside class="w-80 flex flex-col border-r shadow-2xl {$darkMode ? 'bg-gray-900/95 border-gray-800' : 'bg-white/95 border-gray-200'} backdrop-blur-xl">
     <div class="p-4 border-b {$darkMode ? 'border-gray-800 bg-linear-to-br from-blue-950/50 via-gray-900 to-purple-950/50' : 'border-gray-200 bg-linear-to-br from-blue-50 via-white to-indigo-50'}">
       <h2 class="text-lg font-bold flex items-center gap-2 {$darkMode ? 'text-white' : 'text-gray-800'}">
@@ -36,10 +35,8 @@
       <GraphStatistics />
     </div>
   </aside>
-  
-  <!-- Main Content -->
+
   <main class="flex-1 flex flex-col min-w-0">
-    <!-- Sexy Header -->
     <header class="relative border-b shadow-lg overflow-hidden {$darkMode ? 'border-gray-800' : 'border-gray-200'}">
       <div class="absolute inset-0 {$darkMode ? 'bg-linear-to-r from-gray-900 via-gray-800 to-gray-900' : 'bg-linear-to-r from-white via-gray-50 to-white'}"></div>
       {#if $darkMode}
@@ -47,7 +44,7 @@
       {:else}
         <div class="absolute inset-0 opacity-50" style="background-image: url(&quot;data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23e2e8f0' fill-opacity='0.4'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E&quot;);"></div>
       {/if}
-      
+
       <div class="relative z-10 p-4">
         <div class="flex items-center justify-between gap-4 mb-3">
           <div class="flex items-center gap-4 min-w-0">
@@ -97,14 +94,12 @@
         {/if}
       </div>
     </header>
-    
-    <!-- Canvas -->
+
     <div class="flex-1 relative overflow-hidden">
       <GraphCanvas bind:this={graphCanvas} />
     </div>
   </main>
-  
-  <!-- Right Sidebar -->
+
   <aside class="w-80 flex flex-col border-l shadow-2xl {$darkMode ? 'bg-gray-900/95 border-gray-800' : 'bg-white/95 border-gray-200'} backdrop-blur-xl">
     <div class="p-4 border-b {$darkMode ? 'border-gray-800 bg-linear-to-br from-purple-950/50 via-gray-900 to-pink-950/50' : 'border-gray-200 bg-linear-to-br from-purple-50 via-white to-pink-50'}">
       <h2 class="text-lg font-bold flex items-center gap-2 {$darkMode ? 'text-white' : 'text-gray-800'}">

@@ -28,14 +28,14 @@
       try {
         const json = e.target?.result as string;
         const data: GraphData = JSON.parse(json);
-        
+
         if (!data.node_types || !data.edge_types || !data.nodes || !data.edges) {
           alert('Invalid graph file format');
           return;
         }
 
         const spacing = 150;
-        
+
         Object.values(data.nodes).forEach((node, index) => {
           if (!node.layout_properties) {
             const row = Math.floor(index / 5);
@@ -71,7 +71,7 @@
   }
 
   function newGraph() {
-    if (confirm('⚠️ Create a new graph?\n\nThis will delete all current nodes, edges, and types. This action cannot be undone.')) {
+    if (confirm('Create a new graph?\n\nThis will delete all current nodes, edges, and types. This action cannot be undone.')) {
       resetGraph();
     }
   }
@@ -83,37 +83,37 @@
 
 <div class="flex items-center gap-2">
   <button
-    on:click={newGraph}
+    onclick={newGraph}
     class="px-4 py-2.5 rounded-xl font-semibold shadow-lg transition-all transform hover:scale-105 active:scale-95 flex items-center gap-2 {$darkMode ? 'bg-gray-700 hover:bg-gray-600 text-gray-200 border border-gray-600' : 'bg-white hover:bg-gray-50 text-gray-700 border border-gray-300'}"
     title="Create new graph"
   >
     <FilePlus class="w-4 h-4" />
     New
   </button>
-  
+
   <button
-    on:click={exportGraph}
+    onclick={exportGraph}
     class="px-4 py-2.5 rounded-xl font-semibold shadow-lg transition-all transform hover:scale-105 active:scale-95 flex items-center gap-2 bg-linear-to-r from-green-500 to-emerald-500 hover:from-green-400 hover:to-emerald-400 text-white"
   >
     <Download class="w-4 h-4" />
     Export
   </button>
-  
+
   <label class="px-4 py-2.5 rounded-xl font-semibold shadow-lg transition-all transform hover:scale-105 active:scale-95 cursor-pointer flex items-center gap-2 bg-linear-to-r from-blue-500 to-cyan-500 hover:from-blue-400 hover:to-cyan-400 text-white">
     <Upload class="w-4 h-4" />
     Import
     <input
       type="file"
       accept=".json"
-      on:change={importGraph}
+      onchange={importGraph}
       class="hidden"
     />
   </label>
-  
+
   <div class="w-px h-8 {$darkMode ? 'bg-gray-700' : 'bg-gray-300'} mx-1"></div>
-  
+
   <button
-    on:click={toggleDarkMode}
+    onclick={toggleDarkMode}
     class="w-11 h-11 rounded-xl flex items-center justify-center transition-all transform hover:scale-105 active:scale-95 shadow-lg {$darkMode ? 'bg-linear-to-br from-yellow-400 to-orange-500 text-gray-900' : 'bg-linear-to-br from-indigo-600 to-purple-600 text-yellow-300'}"
     title={$darkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
   >
@@ -123,7 +123,7 @@
       <Moon class="w-5 h-5" />
     {/if}
   </button>
-  
+
   <a
     href="https://github.com/danielmatthewsgrout/graph-edit"
     target="_blank"

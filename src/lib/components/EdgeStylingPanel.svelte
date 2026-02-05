@@ -15,7 +15,7 @@
         max="10"
         step="1"
         value={$selectedEdgeIds[0] ? $graphData.edges[$selectedEdgeIds[0]]?.weight ?? 1 : 1}
-        on:input={(e) => {
+        oninput={(e) => {
           const val = Number(e.currentTarget.value);
           pushHistory();
           graphData.update(d => {
@@ -30,8 +30,8 @@
       <label for="edge-line-style" class="text-xs {$darkMode ? 'text-gray-400' : 'text-gray-600'}">Line</label>
       <select
         id="edge-line-style"
-        value={$selectedEdgeIds[0] ? ($graphData.edges[$selectedEdgeIds[0]]?.line_style || $graphData.edge_types[$graphData.edges[$selectedEdgeIds[0]].edge_type]?.line_style || 'solid') : 'solid'}
-        on:change={(e) => {
+        value={$selectedEdgeIds[0] ? ($graphData.edges[$selectedEdgeIds[0]]?.line_style || $graphData.edge_types[$graphData.edges[$selectedEdgeIds[0]]?.edge_type]?.line_style || 'solid') : 'solid'}
+        onchange={(e) => {
           const val = e.currentTarget.value;
           pushHistory();
           graphData.update(d => {

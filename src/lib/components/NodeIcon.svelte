@@ -1,10 +1,14 @@
 <script lang="ts">
   import type { NodeIcon } from '../types';
   import { Circle, Square, Diamond, Star, Hexagon, Triangle, User, Building, Folder, File, Database, Server, Globe, Heart, Zap, Shield } from 'lucide-svelte';
-  
-  export let icon: NodeIcon = 'circle';
-  export let size: number = 24;
-  export let color: string = 'currentColor';
+
+  interface Props {
+    icon?: NodeIcon;
+    size?: number;
+    color?: string;
+  }
+
+  let { icon = 'circle', size = 24, color = 'currentColor' }: Props = $props();
 </script>
 
 {#if icon === 'circle'}

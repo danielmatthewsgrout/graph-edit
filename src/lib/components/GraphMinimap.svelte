@@ -1,24 +1,24 @@
 <script lang="ts">
   import { graphData, darkMode, canvasZoom, canvasPan } from '../stores';
   import { get } from 'svelte/store';
-  import type { Node } from '../types';
-  
-  let minimapElement: SVGSVGElement;
-  let minimapContainer: HTMLDivElement;
-  let isDraggingMinimap = false;
-  
-  export let containerElement: HTMLDivElement;
-  export let onViewportChange: (x: number, y: number) => void;
-  
-  $: bounds = calculateBounds();
-  $: viewportRect = calculateViewportRect();
-  
-  function calculateBounds() {
+
+  interface Props {
+    containerElement: HTMLDivElement;
+    onViewportChange: (x: number, y: number) => void;
+  }
+
+  let { containerElement, onViewportChange }: Props = $props();
+
+  let minimapElement: SVGSVGElement | undefined = $state();
+  let minimapContainer: HTMLDivElement | undefined = $state();
+  let isDraggingMinimap = $state(false);
+
+  let bounds = $derived.by(() => {
     const nodes = Object.values($graphData.nodes);
     if (nodes.length === 0) {
       return { minX: 0, minY: 0, maxX: 1000, maxY: 1000 };
     }
-    
+
     let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
     nodes.forEach(node => {
       const x = node.layout_properties.x_pos;
@@ -28,7 +28,7 @@
       maxX = Math.max(maxX, x + 50);
       maxY = Math.max(maxY, y + 50);
     });
-    
+
     const padding = 50;
     return {
       minX: minX - padding,
@@ -36,77 +36,77 @@
       maxX: maxX + padding,
       maxY: maxY + padding
     };
-  }
-  
-  function calculateViewportRect() {
+  });
+
+  let viewportRect = $derived.by(() => {
     if (!containerElement) return null;
     const rect = containerElement.getBoundingClientRect();
-    const zoom = get(canvasZoom);
-    const pan = get(canvasPan);
-    
+    const zoom = $canvasZoom;
+    const pan = $canvasPan;
+
     const viewportWidth = rect.width / zoom;
     const viewportHeight = rect.height / zoom;
     const viewportX = -pan.x;
     const viewportY = -pan.y;
-    
+
     const width = bounds.maxX - bounds.minX;
     const height = bounds.maxY - bounds.minY;
-    
+
     const scaleX = 200 / width;
     const scaleY = 200 / height;
     const scale = Math.min(scaleX, scaleY);
-    
+
     const scaledX = (viewportX - bounds.minX) * scale;
     const scaledY = (viewportY - bounds.minY) * scale;
     const scaledWidth = viewportWidth * scale;
     const scaledHeight = viewportHeight * scale;
-    
+
     return {
       x: scaledX,
       y: scaledY,
       width: scaledWidth,
       height: scaledHeight
     };
-  }
-  
+  });
+
   function handleMinimapClick(event: MouseEvent) {
     if (!minimapElement || !viewportRect) return;
     const rect = minimapElement.getBoundingClientRect();
     const x = (event.clientX - rect.left) / rect.width * 200;
     const y = (event.clientY - rect.top) / rect.height * 200;
-    
+
     const width = bounds.maxX - bounds.minX;
     const height = bounds.maxY - bounds.minY;
     const scaleX = 200 / width;
     const scaleY = 200 / height;
     const scale = Math.min(scaleX, scaleY);
-    
+
     const worldX = x / scale + bounds.minX;
     const worldY = y / scale + bounds.minY;
-    
+
     if (containerElement) {
       const containerRect = containerElement.getBoundingClientRect();
       const zoom = get(canvasZoom);
       const centerX = containerRect.width / 2 / zoom;
       const centerY = containerRect.height / 2 / zoom;
-      
+
       onViewportChange(centerX - worldX, centerY - worldY);
     }
   }
-  
+
   function handleMinimapMouseDown(event: MouseEvent) {
     if (event.button === 0) {
       isDraggingMinimap = true;
       handleMinimapClick(event);
     }
   }
-  
+
   function handleMinimapMouseMove(event: MouseEvent) {
     if (isDraggingMinimap) {
       handleMinimapClick(event);
     }
   }
-  
+
   function handleMinimapMouseUp() {
     isDraggingMinimap = false;
   }
@@ -124,7 +124,7 @@
   }
 </script>
 
-<div 
+<div
   bind:this={minimapContainer}
   class="absolute bottom-4 right-4 z-20 rounded-lg border shadow-2xl overflow-hidden {$darkMode ? 'bg-gray-900/95 border-gray-700' : 'bg-white/95 border-gray-200'} backdrop-blur-xl"
 >
@@ -140,14 +140,14 @@
       role="button"
       tabindex="0"
       aria-label="Minimap - click and drag to navigate the graph viewport"
-      on:keydown={handleMinimapKeyDown}
-      on:mousedown={handleMinimapMouseDown}
-      on:mousemove={handleMinimapMouseMove}
-      on:mouseup={handleMinimapMouseUp}
-      on:mouseleave={handleMinimapMouseUp}
+      onkeydown={handleMinimapKeyDown}
+      onmousedown={handleMinimapMouseDown}
+      onmousemove={handleMinimapMouseMove}
+      onmouseup={handleMinimapMouseUp}
+      onmouseleave={handleMinimapMouseUp}
     >
       <rect x="0" y="0" width="200" height="200" fill={$darkMode ? '#1f2937' : '#f9fafb'} />
-      
+
       {#if viewportRect}
         <rect
           x={viewportRect.x}
@@ -161,7 +161,7 @@
           opacity="0.8"
         />
       {/if}
-      
+
       {#each Object.entries($graphData.nodes) as [nodeId, node]}
         {@const width = bounds.maxX - bounds.minX}
         {@const height = bounds.maxY - bounds.minY}

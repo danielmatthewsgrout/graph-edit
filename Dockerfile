@@ -1,4 +1,4 @@
-FROM node:25-slim AS builder
+FROM node:22-slim AS builder
 
 USER root
 
@@ -16,16 +16,14 @@ RUN pnpm install --frozen-lockfile
 
 COPY --chown=node:node . .
 
-RUN pnpm install --frozen-lockfile
 RUN pnpm prepare
 RUN pnpm build
 
-FROM node:25-slim
+FROM node:22-slim
 
 WORKDIR /app
 ENV NODE_ENV=production
 
-# Copy production dependencies from builder (already installed)
 COPY --chown=node:node --from=builder /app/build ./build
 COPY --chown=node:node --from=builder /app/node_modules ./node_modules
 COPY --chown=node:node --from=builder /app/package*.json ./

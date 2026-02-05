@@ -6,18 +6,18 @@
 
   const EDGE_LINE_STYLES: EdgeLineStyle[] = ['solid', 'dashed', 'dotted', 'dashdot'];
 
-  let newNodeTypeId = '';
-  let newNodeTypeLabel = '';
-  let newNodeTypeColor = '#ef4444';
-  let newNodeTypeIcon: NodeIcon = 'circle';
-  let newEdgeTypeId = '';
-  let newEdgeTypeLabel = '';
-  let newEdgeTypeColor = '#22c55e';
-  let newEdgeTypeStyle: EdgeLineStyle = 'solid';
-  let editingNodeType: string | null = null;
-  let editingEdgeType: string | null = null;
-  let nodeTypesExpanded = false;
-  let edgeTypesExpanded = false;
+  let newNodeTypeId = $state('');
+  let newNodeTypeLabel = $state('');
+  let newNodeTypeColor = $state('#ef4444');
+  let newNodeTypeIcon: NodeIcon = $state('circle');
+  let newEdgeTypeId = $state('');
+  let newEdgeTypeLabel = $state('');
+  let newEdgeTypeColor = $state('#22c55e');
+  let newEdgeTypeStyle: EdgeLineStyle = $state('solid');
+  let editingNodeType: string | null = $state(null);
+  let editingEdgeType: string | null = $state(null);
+  let nodeTypesExpanded = $state(false);
+  let edgeTypesExpanded = $state(false);
 
   function generateId(prefix: string): string {
     return `${prefix}_${Date.now()}`;
@@ -26,7 +26,7 @@
   function createNodeType() {
     const id = newNodeTypeId || generateId('node_type');
     if (!newNodeTypeLabel) return;
-    
+
     graphData.update(data => {
       if (!data.node_types[id]) {
         data.node_types[id] = {
@@ -38,7 +38,7 @@
       }
       return data;
     });
-    
+
     newNodeTypeId = '';
     newNodeTypeLabel = '';
     newNodeTypeColor = '#ef4444';
@@ -48,7 +48,7 @@
   function createEdgeType() {
     const id = newEdgeTypeId || generateId('edge_type');
     if (!newEdgeTypeLabel) return;
-    
+
     graphData.update(data => {
       if (!data.edge_types[id]) {
         data.edge_types[id] = {
@@ -60,7 +60,7 @@
       }
       return data;
     });
-    
+
     newEdgeTypeId = '';
     newEdgeTypeLabel = '';
     newEdgeTypeColor = '#22c55e';
@@ -117,7 +117,6 @@
 </script>
 
 <div class="space-y-4">
-  <!-- Node Types Section -->
   <div class="rounded-2xl border overflow-hidden shadow-lg {$darkMode ? 'bg-gray-800/80 border-gray-700/50' : 'bg-white border-gray-200'}">
     <div class="px-4 py-3 border-b {$darkMode ? 'bg-linear-to-r from-blue-900/60 to-indigo-900/60 border-gray-700/50' : 'bg-linear-to-r from-blue-50 to-indigo-50 border-blue-100'}">
       <h3 class="font-bold flex items-center gap-2 {$darkMode ? 'text-blue-300' : 'text-blue-800'}">
@@ -126,13 +125,12 @@
         <span class="text-xs px-2 py-0.5 rounded-full font-medium {$darkMode ? 'bg-blue-800/60 text-blue-200' : 'bg-blue-200 text-blue-800'}">{Object.keys($graphData.node_types).length}</span>
       </h3>
     </div>
-    
+
     <div class="p-3 space-y-3">
-      <!-- Active Node Type Dropdown with Icon Preview -->
       <div>
         <label for="active-node-type" class="block text-xs font-semibold mb-1.5 uppercase tracking-wide {$darkMode ? 'text-gray-400' : 'text-gray-500'}">Active Type</label>
         <div class="relative">
-          <select 
+          <select
             id="active-node-type"
             bind:value={$activeNodeType}
             class="w-full pl-12 pr-4 py-3 rounded-xl border text-sm font-medium transition-all appearance-none cursor-pointer {$darkMode ? 'bg-gray-700/80 border-gray-600 text-white hover:bg-gray-700' : 'bg-gray-50 border-gray-200 text-gray-800 hover:bg-white'} focus:ring-2 focus:ring-blue-500 focus:outline-none"
@@ -152,16 +150,15 @@
         </div>
       </div>
 
-      <!-- Collapsible Type List -->
       <div class="border rounded-xl overflow-hidden {$darkMode ? 'border-gray-700/50' : 'border-gray-200'}">
         <button
-          on:click={() => nodeTypesExpanded = !nodeTypesExpanded}
+          onclick={() => nodeTypesExpanded = !nodeTypesExpanded}
           class="w-full px-3 py-2 flex items-center justify-between text-sm font-medium transition-colors {$darkMode ? 'bg-gray-700/50 hover:bg-gray-700 text-gray-300' : 'bg-gray-50 hover:bg-gray-100 text-gray-600'}"
         >
           <span>Manage Types ({Object.keys($graphData.node_types).length})</span>
           <ChevronDown class="w-4 h-4 transition-transform {nodeTypesExpanded ? 'rotate-180' : ''}" />
         </button>
-        
+
         {#if nodeTypesExpanded}
           <div class="p-2 space-y-2 {$darkMode ? 'bg-gray-800/50' : 'bg-gray-50/50'}">
             {#each Object.entries($graphData.node_types) as [typeId, type]}
@@ -173,8 +170,8 @@
                       <input
                         type="text"
                         value={type.label}
-                        on:blur={() => editingNodeType = null}
-                        on:keydown={(e) => {
+                        onblur={() => editingNodeType = null}
+                        onkeydown={(e) => {
                           if (e.key === 'Enter') {
                             updateNodeType(typeId, 'label', e.currentTarget.value);
                             editingNodeType = null;
@@ -183,13 +180,13 @@
                         class="w-full px-2 py-1 text-sm border rounded {$darkMode ? 'bg-gray-600 border-gray-500 text-white' : 'bg-white border-gray-300'}"
                       />
                     {:else}
-                      <button class="font-medium text-sm text-left w-full {$darkMode ? 'text-white' : 'text-gray-800'}" on:click={() => editingNodeType = typeId}>
+                      <button class="font-medium text-sm text-left w-full {$darkMode ? 'text-white' : 'text-gray-800'}" onclick={() => editingNodeType = typeId}>
                         {type.label}
                       </button>
                     {/if}
                   </div>
                   <button
-                    on:click={() => deleteNodeType(typeId)}
+                    onclick={() => deleteNodeType(typeId)}
                     class="w-7 h-7 flex items-center justify-center rounded-lg text-red-500 hover:bg-red-500/20 transition-colors"
                   >✕</button>
                 </div>
@@ -197,13 +194,13 @@
                   <input
                     type="color"
                     value={type.colour}
-                    on:input={(e) => updateNodeType(typeId, 'colour', e.currentTarget.value)}
+                    oninput={(e) => updateNodeType(typeId, 'colour', e.currentTarget.value)}
                     class="w-9 h-9 rounded-lg cursor-pointer border-0 p-0"
                     style="color-scheme: {$darkMode ? 'dark' : 'light'}"
                   />
                   <select
                     value={type.icon || 'circle'}
-                    on:change={(e) => updateNodeType(typeId, 'icon', e.currentTarget.value)}
+                    onchange={(e) => updateNodeType(typeId, 'icon', e.currentTarget.value)}
                     class="flex-1 px-2 py-1 text-xs rounded-lg border {$darkMode ? 'bg-gray-600 border-gray-500 text-white' : 'bg-white border-gray-200'}"
                   >
                     {#each NODE_ICONS as icon}
@@ -213,12 +210,10 @@
                 </div>
               </div>
             {/each}
-            
           </div>
         {/if}
       </div>
 
-      <!-- Add New Node Type (always visible) -->
       <div class="pt-2">
         <label for="new-node-type-label" class="block text-xs font-semibold mb-1.5 uppercase tracking-wide {$darkMode ? 'text-gray-400' : 'text-gray-500'}">Add New Type</label>
         <div class="space-y-2">
@@ -242,7 +237,7 @@
               {/each}
             </select>
             <button
-              on:click={createNodeType}
+              onclick={createNodeType}
               disabled={!newNodeTypeLabel}
               class="w-24 px-4 py-2 rounded-lg text-sm font-medium transition-all disabled:opacity-50 bg-blue-500 hover:bg-blue-600 text-white text-center"
             >+ Add</button>
@@ -252,7 +247,6 @@
     </div>
   </div>
 
-  <!-- Edge Types Section -->
   <div class="rounded-2xl border overflow-hidden shadow-lg {$darkMode ? 'bg-gray-800/80 border-gray-700/50' : 'bg-white border-gray-200'}">
     <div class="px-4 py-3 border-b {$darkMode ? 'bg-linear-to-r from-green-900/60 to-emerald-900/60 border-gray-700/50' : 'bg-linear-to-r from-green-50 to-emerald-50 border-green-100'}">
       <h3 class="font-bold flex items-center gap-2 {$darkMode ? 'text-green-300' : 'text-green-800'}">
@@ -261,13 +255,12 @@
         <span class="text-xs px-2 py-0.5 rounded-full font-medium {$darkMode ? 'bg-green-800/60 text-green-200' : 'bg-green-200 text-green-800'}">{Object.keys($graphData.edge_types).length}</span>
       </h3>
     </div>
-    
+
     <div class="p-3 space-y-3">
-      <!-- Active Edge Type Dropdown -->
       <div>
         <label for="active-edge-type" class="block text-xs font-semibold mb-1.5 uppercase tracking-wide {$darkMode ? 'text-gray-400' : 'text-gray-500'}">Active Type</label>
         <div class="relative">
-          <select 
+          <select
             id="active-edge-type"
             bind:value={$activeEdgeType}
             class="w-full pl-10 pr-4 py-3 rounded-xl border text-sm font-medium transition-all appearance-none cursor-pointer {$darkMode ? 'bg-gray-700/80 border-gray-600 text-white hover:bg-gray-700' : 'bg-gray-50 border-gray-200 text-gray-800 hover:bg-white'} focus:ring-2 focus:ring-green-500 focus:outline-none"
@@ -285,25 +278,24 @@
         </div>
       </div>
 
-      <!-- Collapsible Type List -->
       <div class="border rounded-xl overflow-hidden {$darkMode ? 'border-gray-700/50' : 'border-gray-200'}">
         <button
-          on:click={() => edgeTypesExpanded = !edgeTypesExpanded}
+          onclick={() => edgeTypesExpanded = !edgeTypesExpanded}
           class="w-full px-3 py-2 flex items-center justify-between text-sm font-medium transition-colors {$darkMode ? 'bg-gray-700/50 hover:bg-gray-700 text-gray-300' : 'bg-gray-50 hover:bg-gray-100 text-gray-600'}"
         >
           <span>Manage Types ({Object.keys($graphData.edge_types).length})</span>
           <ChevronDown class="w-4 h-4 transition-transform {edgeTypesExpanded ? 'rotate-180' : ''}" />
         </button>
-        
+
         {#if edgeTypesExpanded}
           <div class="p-2 space-y-2 {$darkMode ? 'bg-gray-800/50' : 'bg-gray-50/50'}">
-              {#each Object.entries($graphData.edge_types) as [typeId, type]}
+            {#each Object.entries($graphData.edge_types) as [typeId, type]}
               <div class="p-2 rounded-lg border transition-all {$darkMode ? 'bg-gray-700/50 border-gray-600/50 hover:bg-gray-700' : 'bg-white border-gray-200 hover:shadow-sm'}">
                 <div class="flex items-center gap-2">
                   <input
                     type="color"
                     value={type.colour}
-                    on:input={(e) => updateEdgeType(typeId, 'colour', e.currentTarget.value)}
+                    oninput={(e) => updateEdgeType(typeId, 'colour', e.currentTarget.value)}
                     class="w-9 h-9 rounded-lg cursor-pointer border-0 p-0 shrink-0"
                     style="color-scheme: {$darkMode ? 'dark' : 'light'}"
                   />
@@ -312,8 +304,8 @@
                       <input
                         type="text"
                         value={type.label}
-                        on:blur={() => editingEdgeType = null}
-                        on:keydown={(e) => {
+                        onblur={() => editingEdgeType = null}
+                        onkeydown={(e) => {
                           if (e.key === 'Enter') {
                             updateEdgeType(typeId, 'label', e.currentTarget.value);
                             editingEdgeType = null;
@@ -322,20 +314,20 @@
                         class="w-full px-2 py-1 text-sm border rounded {$darkMode ? 'bg-gray-600 border-gray-500 text-white' : 'bg-white border-gray-300'}"
                       />
                     {:else}
-                      <button class="font-medium text-sm text-left w-full {$darkMode ? 'text-white' : 'text-gray-800'}" on:click={() => editingEdgeType = typeId}>
+                      <button class="font-medium text-sm text-left w-full {$darkMode ? 'text-white' : 'text-gray-800'}" onclick={() => editingEdgeType = typeId}>
                         {type.label}
                       </button>
                     {/if}
                   </div>
                   <button
-                    on:click={() => deleteEdgeType(typeId)}
+                    onclick={() => deleteEdgeType(typeId)}
                     class="w-7 h-7 flex items-center justify-center rounded-lg text-red-500 hover:bg-red-500/20 transition-colors"
                   >✕</button>
                 </div>
                 <div class="mt-2">
                   <select
                     value={type.line_style || 'solid'}
-                    on:change={(e) => updateEdgeType(typeId, 'line_style', e.currentTarget.value)}
+                    onchange={(e) => updateEdgeType(typeId, 'line_style', e.currentTarget.value)}
                     class="flex-1 h-9 px-2 text-xs rounded-lg border {$darkMode ? 'bg-gray-600 border-gray-500 text-white' : 'bg-white border-gray-200'}"
                   >
                     {#each EDGE_LINE_STYLES as style}
@@ -345,12 +337,10 @@
                 </div>
               </div>
             {/each}
-            
           </div>
         {/if}
       </div>
 
-      <!-- Add New Edge Type (always visible) -->
       <div class="pt-2">
         <label for="new-edge-type-label" class="block text-xs font-semibold mb-1.5 uppercase tracking-wide {$darkMode ? 'text-gray-400' : 'text-gray-500'}">Add New Type</label>
         <div class="space-y-2">
@@ -374,7 +364,7 @@
               {/each}
             </select>
             <button
-              on:click={createEdgeType}
+              onclick={createEdgeType}
               disabled={!newEdgeTypeLabel}
               class="w-24 h-9 rounded-lg text-sm font-medium transition-all disabled:opacity-50 bg-green-500 hover:bg-green-600 text-white text-center"
             >+ Add</button>
